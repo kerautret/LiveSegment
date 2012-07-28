@@ -19,7 +19,7 @@ using namespace ImaGene;
 
 
 
-int  retTaille(string nomFichier);
+unsigned int  retTaille(string nomFichier);
 double * extraitChamp(string nomFichier, int indice);
 
 
@@ -29,7 +29,7 @@ double * extraitChamp(string nomFichier, int indice);
 static Arguments args;
 
 
-int
+unsigned int
 remain( int argc, char** argv ) 
 {
   args.addOption("-import", "-import <fichier.dat> epsilon isClosed:1:0 ", "0", "O.0001", "0");
@@ -115,14 +115,14 @@ extraitChamp(string nomFichier, int indice){
   
   string str;
   getline(flux, str );
-  int position=0;
+  unsigned int position=0;
   while ( flux.good() )
     {
       if ( ( str != "" ) 
 	   && ( str[ 0 ] != '#' ) )
 	{
 	  istringstream in_str( str );
-	  uint idx = 1;
+	  unsigned int idx = 1;
 	  double val;
 	  while ( in_str.good() )
 	    {
@@ -146,7 +146,7 @@ extraitChamp(string nomFichier, int indice){
 
 
 
-int 
+unsigned int 
 retTaille(string nomFichier){
   char file[nomFichier.size()];
   strcpy(file, nomFichier.c_str() );

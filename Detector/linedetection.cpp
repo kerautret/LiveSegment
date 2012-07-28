@@ -1073,7 +1073,7 @@ LineDetection::LineDetection (
 {
   nbPointAdded = 0;
   isDetected = false;
-  if (vLeft.size () < 2 || vRight.size () < 2  || vLeft.at(0).size () == 0)
+  if (vLeft.size () < 2 || vRight.size () < 2  ||(int) vLeft.at(0).size () == 0)
   {
     // cerr << "detection de segments flous pas possible (second) vleft size = "
     //      << vLeft.at(0).size() << endl;
@@ -1087,14 +1087,14 @@ LineDetection::LineDetection (
 
   // Calcul du voisin le plus proche dans la liste des voisins Gauche
   int decalL = 1;
-  while (vLeft.at(decalL).size () == 0 && decalL <vLeft.size () - 1)
+  while (vLeft.at(decalL).size () == 0 && decalL < (int) vLeft.size () - 1)
     decalL ++;
   int decalR = 1;
-  while (vRight.at(decalR).size () == 0 && decalR <vRight.size () - 1)
+  while (vRight.at(decalR).size () == 0 && decalR < (int) vRight.size () - 1)
     decalR ++;
 
-  if (decalR >= vRight.size () || decalL >= vLeft.size ()
-      || vRight.at(decalR).size () == 0 || vLeft.at(decalL).size () == 0)
+  if (decalR >= (int) vRight.size () || decalL >= (int) vLeft.size ()
+      || (int) vRight.at(decalR).size () == 0 || (int) vLeft.at(decalL).size () == 0)
   {
     // cerr << "detection de segments flous pas possible: pas assez de points pour l'initialisation"  << endl;
     cerr << "Pas assez de points pour l'initialisation" << endl;
