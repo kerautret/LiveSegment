@@ -168,7 +168,7 @@ vector<QPoint> LineDetection::detectLine3 (QPoint p1, QPoint p2,
 
   vector<QPoint> vectCandSini = pointLeftCandidatesV.at (0);
 
-  if (pointLeftCandidatesV.size () == 0 || pointRightCandidatesV.size () == 0)
+  if ((int)pointLeftCandidatesV.size () == 0 || (int) pointRightCandidatesV.size () == 0)
   {
     cerr << "aucune droite detectable (pas de candidats a gauche ou a droite)"
          << endl;
@@ -227,7 +227,7 @@ vector<QPoint> LineDetection::detectLine3 (QPoint p1, QPoint p2,
                dirScan2, tabGradient, largeur, hauteur, tabGradientUsed,
                LEFT, QPoint (p11.x () - p12.x (), p11.y () - p12.y ()), 0.9);
 
-  if (pointLeftCandidatesV.size () == 0 || pointRightCandidatesV.size () == 0)
+  if ((int) pointLeftCandidatesV.size () == 0 || (int) pointRightCandidatesV.size () == 0)
   {
     cerr << "aucune droite detectable." << endl;
     return vectResu;
@@ -278,7 +278,7 @@ vector<QPoint> LineDetection::detectLine3 (QPoint p1, QPoint p2,
                dirScan2, tabGradient, largeur, hauteur, tabGradientUsed,
                LEFT, QPoint (p11.x () - p12.x (), p11.y () - p12.y ()), 0.98);
 
-  if (pointLeftCandidatesV.size () == 0 || pointRightCandidatesV.size () == 0)
+  if ((int) pointLeftCandidatesV.size () == 0 || (int) pointRightCandidatesV.size () == 0)
   {
     cerr << "aucune droite detectable." << endl;
     return vectResu;
@@ -332,7 +332,7 @@ vector<QPoint> LineDetection::detectLine2 (QPoint p1, QPoint p2,
             = DirectionalUtil::getGradientMaxFromScans (dirScan,
                        tabImage, largeur, hauteur,
                        tabGradient, tabGradientUsed, RIGHT, seuil);
-  if (pointLeftCandidates.size () == 0 || pointRightCandidates.size () == 0)
+  if ((int) pointLeftCandidates.size () == 0 || (int) pointRightCandidates.size () == 0)
   {
     cerr << "aucune droite detectable (pas de candidats a gauche ou a droite)"
          << endl;
@@ -385,7 +385,7 @@ vector<QPoint> LineDetection::detectLine2 (QPoint p1, QPoint p2,
                       tabGradient, largeur, hauteur, tabGradientUsed, LEFT,
                       QPoint (p11.x () - p12.x (), p11.y () - p12.y ()), 0.9);
 
-  if (pointLeftCandidates.size () == 0 || pointRightCandidates.size () == 0)
+  if ((int) pointLeftCandidates.size () == 0 || (int) pointRightCandidates.size () == 0)
   {
     cerr << "aucune droite detectable." << endl;
     return vectResu;
@@ -427,7 +427,7 @@ vector<QPoint> LineDetection::detectLine2 (QPoint p1, QPoint p2,
   //           dirScan2, tabImage, largeur, hauteur,
   //           LEFT, 2, 2, dirScan2.getScan (0, RIGHT).size () / 2, 0);
 
-  if (pointLeftCandidates.size () == 0 || pointRightCandidates.size () == 0)
+  if ((int) pointLeftCandidates.size () == 0 || (int) pointRightCandidates.size () == 0)
   {
     cerr << "aucune droite detectable." << endl;
     return vectResu;
@@ -476,7 +476,7 @@ vector<QPoint> LineDetection::detectLine (QPoint p1, QPoint p2,
                       = DirectionalUtil::getGradientMaxFromScans (dirScan,
                             tabImage, largeur, hauteur,
                             tabGradient, tabGradientUsed, RIGHT, seuil);
-  if (pointLeftCandidates.size () == 0 || pointRightCandidates.size () == 0)
+  if ((int) pointLeftCandidates.size () == 0 || (int) pointRightCandidates.size () == 0)
   {
     cerr << "aucune droite detectable (pas de candidats a gauche ou a droite)"
          << endl;
@@ -517,7 +517,7 @@ vector<QPoint> LineDetection::detectLine (QPoint p1, QPoint p2,
                    tabImage, largeur, hauteur,
                    tabGradient, tabGradientUsed, RIGHT,
                    QPoint (p11.x () - p12.x (), p11.y () - p12.y ()), seuil);
-  if (pointLeftCandidates.size () == 0 || pointRightCandidates.size () == 0)
+  if ((int) pointLeftCandidates.size () == 0 || (int) pointRightCandidates.size () == 0)
   {
     cerr << "aucune droite detectable." << endl;
     return vectResu;
@@ -565,7 +565,7 @@ vector<QPoint> LineDetection::detectLine (QPoint p1, QPoint p2,
                     tabGradient, largeur, hauteur, tabGradientUsed, LEFT,
                     QPoint (p11.x () - p12.x (), p11.y () - p12.y ()), 0.9);
 
-  if (pointLeftCandidates.size () == 0 || pointRightCandidates.size () == 0)
+  if ((int) pointLeftCandidates.size () == 0 || (int) pointRightCandidates.size () == 0)
   {
     cerr << "aucune droite detectable." << endl;
     return vectResu;
@@ -595,7 +595,7 @@ LineDetection::LineDetection (vector<QPoint> vLeft, vector<QPoint> vRight,
                               double epaisseur, int interuptSizeMax)
 {
   isDetected = false;
-  if (vLeft.size () < 5 || vRight.size () < 5)
+  if ((int) vLeft.size () < 5 || (int)vRight.size () < 5)
   {
     // cerr << "detection de segments flous pas possible (simple)" << endl;
     cerr << "Bande de recherche trop courte" << endl;
@@ -683,14 +683,14 @@ LineDetection::LineDetection (vector< vector<QPoint> > vLeft,
 
   // Calcul du voisin le plus proche dans la liste des voisins Gauche
   int decalL = 1;
-  while (vLeft.at(decalL).size () == 0 && decalL < vLeft.size () -1)
+  while ((int) vLeft.at(decalL).size () == 0 && decalL < (int) vLeft.size () -1)
     decalL ++;
   int decalR = 1;
-  while (vRight.at(decalR).size () == 0 && decalR < vRight.size () -1)
+  while ((int) vRight.at(decalR).size () == 0 && decalR < (int) vRight.size () -1)
     decalR ++;
   
-  if (decalR >= vRight.size () || decalL >= vLeft.size ()
-      || vRight.at (decalR).size () == 0 || vLeft.at (decalL).size () == 0)
+  if (decalR >= (int)vRight.size () || decalL >= (int)vLeft.size ()
+      || (int)vRight.at (decalR).size () == 0 || (int) vLeft.at (decalL).size () == 0)
   {
     //cerr << "detection de segments flous pas possible: pas assez de points pour l'initialisation" << endl;
     cerr << "Pas assez de points pour l'initialisation" << endl;
@@ -712,8 +712,8 @@ LineDetection::LineDetection (vector< vector<QPoint> > vLeft,
          && pos + decalL < (int) vLeft.size ()
          && pos + decalR < (int) vRight.size ())
   {
-    if (vLeft.at (pos + decalL).size () != 0
-        && vRight.at (pos + decalR).size () != 0)
+    if ((int)vLeft.at (pos + decalL).size () != 0
+        && (int)vRight.at (pos + decalR).size () != 0)
     {
       vectCandLeft = vLeft.at (decalL + pos);
       vectCandRight = vRight.at (decalR + pos);
@@ -814,7 +814,7 @@ LineDetection::LineDetection (
 {
   nbPointAdded = 0;
   isDetected = false;
-  if (vLeft.size () < 2 || vRight.size () < 2 || vLeft.at(0).size () == 0)
+  if ((int)vLeft.size () < 2 || (int)vRight.size () < 2 || (int)vLeft.at(0).size () == 0)
   {
     // cerr << "detection de segments flous pas possible (second) vleft size = "
     //      << vLeft.at(0).size () << endl;
@@ -825,15 +825,15 @@ LineDetection::LineDetection (
   int decalC = 0;
   Point2D pCentral (vLeft.at(decalC).at(0).x (), vLeft.at(decalC).at(0).y ());
   int decalL = 1;
-  while (vLeft.at(decalL).size () == 0 && decalL < vLeft.size () - 1)
+  while ((int) vLeft.at(decalL).size () == 0 && (int) decalL < (int) vLeft.size () - 1)
     decalL ++;
 
   int decalR = 1;
-  while (vRight.at(decalR).size () == 0 && decalR < vRight.size () - 1)
+  while ((int) vRight.at(decalR).size () == 0 && (int) decalR < (int) vRight.size () - 1)
     decalR ++;    
 
-  if (decalR >= vRight.size () || decalL >= vLeft.size ()
-      || vRight.at(decalR).size () == 0 || vLeft.at(decalL).size () == 0)
+  if (decalR >= (int) vRight.size () || decalL >= (int) vLeft.size ()
+      || (int) vRight.at(decalR).size () == 0 || (int) vLeft.at(decalL).size () == 0)
   {
     // cerr << "detection de segments flous pas possible: pas assez de points pour l'initialisation"  << endl;
     cerr << "Pas assez de points pour l'initialisation" << endl;
@@ -848,8 +848,8 @@ LineDetection::LineDetection (
          && pos + decalL < (int) vLeft.size ()
          && pos + decalR < (int) vRight.size ())
   {
-    if (vLeft.at (pos + decalL).size () != 0 &&
-        vRight.at (pos + decalR).size () != 0)
+    if ((int) vLeft.at (pos + decalL).size () != 0 &&
+        (int) vRight.at (pos + decalR).size () != 0)
     {
       pLeft = Point2D (vLeft.at (decalL + pos).at(0).x (),
                        vLeft.at (decalL + pos).at(0).y ());
@@ -946,7 +946,7 @@ LineDetection::LineDetection (
 {
   nbPointAdded = 0;
   isDetected = false;
-  if (vLeft.size () < 2 || vRight.size () < 2 || vLeft.at(0).size () == 0)
+  if ((int)vLeft.size () < 2 || (int)vRight.size () < 2 || (int)vLeft.at(0).size () == 0)
   {
     // cerr << "detection de segments flous pas possible (second) vleft size = "
     //      << vLeft.at(0).size () << endl;
@@ -1073,7 +1073,7 @@ LineDetection::LineDetection (
 {
   nbPointAdded = 0;
   isDetected = false;
-  if (vLeft.size () < 2 || vRight.size () < 2  ||(int) vLeft.at(0).size () == 0)
+  if ((int)vLeft.size () < 2 || (int)vRight.size () < 2  ||(int) vLeft.at(0).size () == 0)
   {
     // cerr << "detection de segments flous pas possible (second) vleft size = "
     //      << vLeft.at(0).size() << endl;
@@ -1087,10 +1087,10 @@ LineDetection::LineDetection (
 
   // Calcul du voisin le plus proche dans la liste des voisins Gauche
   int decalL = 1;
-  while (vLeft.at(decalL).size () == 0 && decalL < (int) vLeft.size () - 1)
+  while ((int)vLeft.at(decalL).size () == 0 && decalL < (int) vLeft.size () - 1)
     decalL ++;
   int decalR = 1;
-  while (vRight.at(decalR).size () == 0 && decalR < (int) vRight.size () - 1)
+  while ((int)vRight.at(decalR).size () == 0 && decalR < (int) vRight.size () - 1)
     decalR ++;
 
   if (decalR >= (int) vRight.size () || decalL >= (int) vLeft.size ()
@@ -1115,8 +1115,8 @@ LineDetection::LineDetection (
          && pos + decalL < (int) vLeft.size ()
          && pos + decalR < (int) vRight.size ())
   {
-    if (vLeft.at (pos + decalL).size() != 0
-        && vRight.at (pos + decalR).size () != 0)
+    if ((int)vLeft.at (pos + decalL).size() != 0
+        && (int)vRight.at (pos + decalR).size () != 0)
     {
       vectCandLeft = vLeft.at (decalL + pos);
       vectCandRight = vRight.at (decalR + pos);
@@ -1232,7 +1232,7 @@ LineDetection::LineDetection (DirectionalScan &dirScan,
 
   int decalL = 1;
   int decalR = 1;
-  if (indiceCenterSection0 + correlWidth >= dirScan.getScan (0, RIGHT).size ()
+  if (indiceCenterSection0 + correlWidth >= (int) dirScan.getScan (0, RIGHT).size ()
       || indiceCenterSection0 - correlWidth < 0)
   {
     cerr << "detection pas possible centre trop exentre " <<  endl;
@@ -1250,8 +1250,8 @@ LineDetection::LineDetection (DirectionalScan &dirScan,
          && dirUtile.isScanImgDefined (dirScan, pos, LEFT)
          && dirUtile.isScanImgDefined (dirScan, pos, RIGHT))
   {
-    if (dirUtile.getScanVectCorrel (dirScan, pos, LEFT).size () != 0
-        && dirUtile.getScanVectCorrel (dirScan, pos, RIGHT).size () != 0)
+    if ((int)dirUtile.getScanVectCorrel (dirScan, pos, LEFT).size () != 0
+        && (int)dirUtile.getScanVectCorrel (dirScan, pos, RIGHT).size () != 0)
     {
       pLeft = Point2D (
                 dirUtile.getScanVectCorrel (dirScan, pos, LEFT).at(0).x (),
