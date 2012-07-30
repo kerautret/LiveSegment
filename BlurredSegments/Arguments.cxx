@@ -70,7 +70,7 @@ ImaGene::Arguments::Option::operator<( const std::string & s ) const
 }
 
 std::string 
-ImaGene::Arguments::Option::getValue( uint i ) const
+ImaGene::Arguments::Option::getValue( unsigned int i ) const
 {
   if ( i < values.size() )
     return values[ i ];
@@ -79,19 +79,19 @@ ImaGene::Arguments::Option::getValue( uint i ) const
 
 
 int 
-ImaGene::Arguments::Option::getIntValue( uint i ) const
+ImaGene::Arguments::Option::getIntValue( unsigned int i ) const
 {
   return atoi( getValue( i ).c_str() );
 }
 
 float 
-ImaGene::Arguments::Option::getFloatValue( uint i ) const
+ImaGene::Arguments::Option::getFloatValue( unsigned int i ) const
 {
   return atof( getValue( i ).c_str() );
 }
 
 void 
-ImaGene::Arguments::Option::setValue( uint i, const std::string & s ) 
+ImaGene::Arguments::Option::setValue( unsigned int i, const std::string & s ) 
 {
   if ( i < values.size() )
     values[ i ] = s;
@@ -130,21 +130,21 @@ ImaGene::Arguments::Options::get( string n ) const
   return 0;
 }
 
-uint 
+unsigned int 
 ImaGene::Arguments::Options::nb() const
 {
   return m_options.size();
 }
 
 ImaGene::Arguments::Option*
-ImaGene::Arguments::Options::get( uint i )
+ImaGene::Arguments::Options::get( unsigned int i )
 {
   ASSERT_Arguments( i < nb() );
   return &( m_options[ i ] );
 }
 
 const ImaGene::Arguments::Option*
-ImaGene::Arguments::Options::get( uint i ) const
+ImaGene::Arguments::Options::get( unsigned int i ) const
 {
   ASSERT_Arguments( i < nb() );
   return &( m_options[ i ] );
@@ -217,7 +217,7 @@ ImaGene::Arguments::addBooleanOption( const std::string & name,
 bool
 ImaGene::Arguments::addOption( const std::string & name,
 			       const std::string & description,
-			       uint nb,
+			       unsigned int nb,
 			       const std::vector<std::string> & defaultvals )
 {
   if ( m_opts.get( name ) != 0)
@@ -418,7 +418,7 @@ ImaGene::Arguments::readArguments( int argc, char* argv[] )
 	  //if ( m_opts.get( argv[ i ] ) == 0 ) return false;
 	  Option* opt = m_opts.get( argv[ i ] );
 	  if ( opt == 0 ) return false;
-	  for ( uint j = 0; j < opt->nbparams; ++j )
+	  for ( unsigned int j = 0; j < opt->nbparams; ++j )
 	    {
 	      ++i;
 	      if ( i < argc )
@@ -485,8 +485,8 @@ ImaGene::Arguments::usage( const string & command,
 {
   string u = "Usage: " + command + " " + options + '\n';
   u += "\n" + text + "\n\nAvailable options:\n"; 
-  uint pos = 0;
-  uint pos_prev = 0;
+  unsigned int pos = 0;
+  unsigned int pos_prev = 0;
   while ( pos_prev != string::npos )
     {
       pos = options.find( ' ', pos_prev );
@@ -540,15 +540,15 @@ ImaGene::Arguments::init()
   m_opts.add
     ( Option( "-h", 0, "-h : display usage" ) ); 
   m_opts.add
-    ( Option( "-d", 1, "-d <uint>: sets the dimension of the space" ) ); 
+    ( Option( "-d", 1, "-d <unsigned int>: sets the dimension of the space" ) ); 
   m_opts.add
-    ( Option( "-x", 1, "-x <uint>: sets the space size along the 0-coordinate" ) ); 
+    ( Option( "-x", 1, "-x <unsigned int>: sets the space size along the 0-coordinate" ) ); 
   m_opts.add
-    ( Option( "-y", 1, "-y <uint>: sets the space size along the 1-coordinate" ) ); 
+    ( Option( "-y", 1, "-y <unsigned int>: sets the space size along the 1-coordinate" ) ); 
   m_opts.add
-    ( Option( "-z", 1, "-z <uint>: sets the space size along the 2-coordinate" ) ); 
+    ( Option( "-z", 1, "-z <unsigned int>: sets the space size along the 2-coordinate" ) ); 
   m_opts.add
-    ( Option( "-t", 1, "-t <uint>: sets the space size along the 3-coordinate" ) ); 
+    ( Option( "-t", 1, "-t <unsigned int>: sets the space size along the 3-coordinate" ) ); 
   m_opts.add
     ( Option( "-r", 1, "-r <float>: specifies the size of a shape (generally radius of sphere)" ) ); 
   m_opts.add

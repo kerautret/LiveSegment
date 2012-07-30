@@ -30,7 +30,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "ImaGene/base/BasicTypes.h"
+
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
@@ -67,21 +67,21 @@ public:
   class Option {
   public:
     std::string name;
-    uint nbparams;
+    unsigned int nbparams;
     std::string description;
     bool present;
     std::vector<std::string> values;
 
-    INLINE Option( std::string na, uint nb, std::string descr );
-    INLINE Option( std::string na, uint nb, std::string descr,
+    INLINE Option( std::string na, unsigned int nb, std::string descr );
+    INLINE Option( std::string na, unsigned int nb, std::string descr,
 		       std::vector<std::string> defaultval );
     bool operator==( const std::string & s ) const;
     bool operator!=( const std::string & s ) const;
     bool operator<( const std::string & s ) const;
-    std::string getValue( uint i ) const;
-    int getIntValue( uint i ) const;
-    float getFloatValue( uint i ) const;
-    void setValue( uint i, const std::string & s );
+    std::string getValue( unsigned int i ) const;
+    int getIntValue( unsigned int i ) const;
+    float getFloatValue( unsigned int i ) const;
+    void setValue( unsigned int i, const std::string & s );
     
   };
 
@@ -92,9 +92,9 @@ public:
     bool add( const Option & opt );
     Option* get( std::string n );
     const Option* get( std::string n ) const;
-    uint nb() const;
-    Option* get( uint i );
-    const Option* get( uint i ) const;
+    unsigned int nb() const;
+    Option* get( unsigned int i );
+    const Option* get( unsigned int i ) const;
     void setOptionPresence( std::string n, bool value );
     bool getOptionPresence( std::string n ) const;
   };
@@ -128,7 +128,7 @@ public:
    */
   bool addOption( const std::string & name,
 		  const std::string & description,
-		  uint nb,
+		  unsigned int nb,
 		  const std::vector<std::string> & defaultvals );
 
   /**
@@ -245,8 +245,8 @@ public:
   // ------------------------- public Datas -----------------------------------
 public:
 
-  uint dim;
-  uint sizes[ 100 ];
+  unsigned int dim;
+  unsigned int sizes[ 100 ];
   float radius;
   float radius_first;
   float radius_last;
