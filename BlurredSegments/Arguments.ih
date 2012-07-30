@@ -43,21 +43,21 @@
 // Implementation of inline methods                                          //
 
 ImaGene::Arguments::Option::Option
-( std::string na, uint nb, std::string descr )
+( std::string na, unsigned int nb, std::string descr )
   : name( na ), nbparams( nb ), description( descr ), present( false ),
     values( nb )
 {
-  for ( uint i = 0; i < nb; ++i )
+  for ( unsigned int i = 0; i < nb; ++i )
     values[ i ] = "";
 }
 
 ImaGene::Arguments::Option::Option
-( std::string na, uint nb, std::string descr, 
+( std::string na, unsigned int nb, std::string descr, 
   std::vector<std::string> defaultvals )
   : name( na ), nbparams( nb ), description( descr ), present( false ),
     values( nb )
 {
-  for ( uint i = 0; i < nb; ++i )
+  for ( unsigned int i = 0; i < nb; ++i )
     values[ i ] = ( i < defaultvals.size() )
       ? defaultvals[ i ]
       : "";
