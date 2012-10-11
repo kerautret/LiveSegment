@@ -1,0 +1,14 @@
+language: cpp
+compiler:
+  - clang
+install:
+  - sudo apt-get update
+  - sudo apt-get install libqt4-dev qt4-qmake
+  - sudo apt-get install liblapack-dev libblas-dev libatlas-dev libboost-dev
+  - sudo apt-get install libqwt-dev
+
+script:
+  - qmake -project
+  - qmake LiveSegment.pro
+  - make
+
