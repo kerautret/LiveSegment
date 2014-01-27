@@ -33,10 +33,6 @@ DirectionalScan::DirectionalScan (Pixel p1, Pixel p2, double directionAngle)
 }
 
 
-DirectionalScan::DirectionalScan ()
-{
-}
-
 
 vector<Pixel> DirectionalScan::getVectPoints ()
 {

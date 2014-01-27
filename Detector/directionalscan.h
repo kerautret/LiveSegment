@@ -54,14 +54,6 @@ public:
   DirectionalScan (Pixel p1, Pixel p2, Pixel v);
 
   /**
-   * @fn DirectionalScan()
-   * \brief Creates a "default" scan strip.
-   * BUG : Obligatoire car Paint comporte un attribut DirectionalScan
-   *       initialise avec ce constructeur
-   */
-  DirectionalScan ();
-
-  /**
    * @fn ~DirectionalScan()
    * \brief Deletes the scan strip.
    * BUG : Desallocations a verifier
