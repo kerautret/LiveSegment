@@ -1,17 +1,16 @@
 #ifndef DIRECTIONALSCAN_H
 #define DIRECTIONALSCAN_H
 
-#include <QPoint>
 #include <cstdlib>
 #include <vector>
-
+#include "pixel.h"
 using namespace std;
 
 
 
 /** 
  * @class DirectionalScan directionalscan.h
- * \brief Scan strip in the main direction defined by two points.
+ * \brief Scan strip composed of parallel scan lines.
  * \author {B. Kerautret}
  */
 class DirectionalScan
@@ -20,7 +19,7 @@ class DirectionalScan
 public:
   
   /**
-   * @fn DirectionalScan(QPoint p1, QPoint p2)
+   * @fn DirectionalScan(Pixel p1, Pixel p2)
    * \brief Creates a scan strip from two control points.
    * Creates a scan strip from two control points.
    * The scan strip is composed of parallel scan lines, the first one being
@@ -28,10 +27,10 @@ public:
    * @param p1 start control point
    * @param p2 end control point
    */
-  DirectionalScan (QPoint p1, QPoint p2);
+  DirectionalScan (Pixel p1, Pixel p2);
 
   /**
-   * @fn DirectionalScan(QPoint p1, QPoint p2, double directionAngle)
+   * @fn DirectionalScan(Pixel p1, Pixel p2, double directionAngle)
    * \brief Creates a scan strip from two control points and a angular threshold
    * Creates a scan strip from two control points and an angular threshold.
    * The scan strip is composed of parallel scan lines, the first one being
@@ -41,15 +40,18 @@ public:
    * @param p2 end control point
    * @param directionAngle angular threshold value
    */
-  DirectionalScan (QPoint p1, QPoint p2, double directionAngle);
+  DirectionalScan (Pixel p1, Pixel p2, double directionAngle);
 
   /**
-   * @fn DirectionalScan()
-   * \brief Creates a "default" scan strip.
-   * BUG : Obligatoire car Paint comporte un attribut DirectionalScan
-   *       initialise avec ce constructeur
+   * @fn DirectionalScan(Pixel p1, Pixel p2, Pixel v)
+   * \brief Creates a scan strip from two control points and a vector
+   * The scan strip is composed of parallel scan lines, the first one being
+   *   defined by control points p1 and p2.
+   * @param p1 : first control point.
+   * @param p2 : second control point.
+   * @param v : lead vector of the scan strip.
    */
-  DirectionalScan ();
+  DirectionalScan (Pixel p1, Pixel p2, Pixel v);
 
   /**
    * @fn ~DirectionalScan()
@@ -90,26 +92,26 @@ public:
 
   /**
    * @fn getLeftScan(int num)
-   * \brief Returns the vector<QPoint> associated to the "num" left scan.
-   * @return  the vector<QPoint> associated to a scan
+   * \brief Returns the vector<Pixel> associated to the "num" left scan.
+   * @return  the vector<Pixel> associated to a scan
    */
-  vector<QPoint> getLeftScan (int num);
+  vector<Pixel> getLeftScan (int num);
 
 
   /**
    * @fn getRightScan(int num)
-   * \brief Returns the vector<QPoint> associated to the "num" right  scan.
-   * @return  the vector<QPoint> associated to a scan
+   * \brief Returns the vector<Pixel> associated to the "num" right  scan.
+   * @return  the vector<Pixel> associated to a scan
    */
-  vector<QPoint> getRightScan (int num);
+  vector<Pixel> getRightScan (int num);
 
 
   /**
    * @fn getLeftScan(int num)
-   * \brief Returns the vector<QPoint> associated to the "num" "direction" scan.
-   * @return  the vector<QPoint> associated to a scan
+   * \brief Returns the vector<Pixel> associated to the "num" "direction" scan.
+   * @return  the vector<Pixel> associated to a scan
    */
-  vector<QPoint> getScan (int num, int direction);
+  vector<Pixel> getScan (int num, int direction);
 
 
   /**
@@ -121,12 +123,12 @@ public:
 
   /**
    * @fn getScanOrientedIndex(int num, int direction)
-   * \brief returns * the vector<QPoint> associated to the "num" "direction" scan if
+   * \brief returns * the vector<Pixel> associated to the "num" "direction" scan if
    * the index is negative, return the scan in the opposite direction
-   * with the bas(index) position.  @return the vector<QPoint>
+   * with the bas(index) position.  @return the vector<Pixel>
    * associated to a scan
    */
-  vector<QPoint> getScanOrientedIndex (int num, int direction);
+  vector<Pixel> getScanOrientedIndex (int num, int direction);
 
 
   /**
@@ -154,17 +156,17 @@ public:
 
 
   /**
-   * @fn isInImageBounds(QPoint &p)
+   * @fn isInImageBounds(Pixel &p)
    * \brief  Checks if the point belongs to the scan area.
    */
-  bool isInImageBounds (QPoint &p);
+  bool isInImageBounds (Pixel &p);
 
 
   /**
-   * @fn isInImageBounds(vector<QPoint> &vectP)
+   * @fn isInImageBounds(vector<Pixel> &vectP)
    * \brief  Checks if the points all belong to the scan area.
    */
-  bool isInImageBounds (vector<QPoint> &vectP);
+  bool isInImageBounds (vector<Pixel> &vectP);
   
   /** Scan area used to compute the scans (all or part of the image) */
   int xmin, xmax, ymin, ymax;
@@ -174,46 +176,49 @@ public:
 
 protected:
   /** Left scan lines */
-  vector <vector<QPoint> > vectLeftScan;
+  vector <vector<Pixel> > vectLeftScan;
   /** Right scan lines */
-  vector <vector<QPoint> > vectRightScan;
+  vector <vector<Pixel> > vectRightScan;
+
+  /** Left scan iterating position */
+  int leftPos;
+  /** Right scan iterating position */
+  int rightPos;
+
 
   /** Computes the offset vectors of the segment joining p1 to p2 */
-  void computeMotif (QPoint p1, QPoint p2);
-//  void computeMotifInv (QPoint p1, QPoint p2);
+  void computeMotif (Pixel p1, Pixel p2);
 
   /** Reverse a reversed segment to v */
-  vector<QPoint> inverseVector (vector<QPoint> &v);
+  vector<Pixel> inverseVector (vector<Pixel> &v);
   
   /** Returns the offset vectors the inverse segment to tabDepl */
-  QPoint *inverseSensMotif (QPoint *tabDepl, int taille);
+  Pixel *inverseSensMotif (Pixel *tabDepl, int taille);
   
   /** Returns the scan line */
-  vector<QPoint> getVectPoints ();
+  vector<Pixel> getVectPoints ();
   /** Checks if point p belongs to the scan area. */
-  bool isBetweenLines (QPoint p); 
+  bool isBetweenLines (Pixel p); 
   
   /** Checks if point p is on rhe right side of the initial scan line. */
-  bool isRight (QPoint p);  
+  bool isRight (Pixel p);  
   /** Returns the parameters of the scan strip border passing through P1. */
   int *retCoeffDroitesD1 ();
   /** Returns the parameters of the scan strip border passing through P2. */
   int *retCoeffDroitesD2 ();
   
-//  QPoint *retTabDeplacements ();
-
   /** Returns an offset vector orthogonal to the scan line. */
-  QPoint *retTabDeplacements (int direction);
+  Pixel *retTabDeplacements (int direction);
   /** Returns the length of the scan line - 1. */
   int retTailleMotif ();
 
+
   /** Control points. */
-  QPoint p1;
-  QPoint p2;
+  Pixel p1, p2;
   /** Pixels of the scan line. */
-  vector<QPoint> vectPoints;
+  vector<Pixel> vectPoints;
   /** Offset vectors of the scan line. */
-  QPoint  *tabDeplacements;
+  Pixel  *tabDeplacements;
 
   /** Scan strip border passing through P1 */
   int a1, b1, mu1;
@@ -231,6 +236,22 @@ protected:
 
   /** Computes the scan strip borders based on a direction angle. */
   void calcDroites (double directionAngle);
+
+
+  /** Starts an iterator and returns the central scan */
+  vector<Pixel> start ();
+
+  /** Checks if there are other scans on left side */
+  bool leftOn ();
+
+  /** Returns the next left scan */
+  vector<Pixel> left ();
+
+  /** Checks if there are other scans on right side */
+  bool rightOn ();
+
+  /** Returns the next right scan */
+  vector<Pixel> right ();
 };
 
 #endif

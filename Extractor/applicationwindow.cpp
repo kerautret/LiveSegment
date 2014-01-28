@@ -4,20 +4,21 @@
 
 ApplicationWindow::ApplicationWindow (int *val)
 {
-  paint = new Paint;
-  setCentralWidget (paint);
+  Q_UNUSED (val);
+  extractor = new ExtractionWidget;
+  setCentralWidget (extractor);
   // setFocus();  
   // createActions ();
   // createMenus ();
-  setWindowTitle (tr ("Blurred Segments Detection"));
+  setWindowTitle (tr ("Blurred Segments Extraction"));
   resize (400, 400);
 }
 
 
 ApplicationWindow::ApplicationWindow ()
 {
-    paint = new Paint;
-    setCentralWidget (paint);
+    extractor = new ExtractionWidget;
+    setCentralWidget (extractor);
     // setFocus ();
     // createActions ();
     // createMenus ();
@@ -28,13 +29,13 @@ ApplicationWindow::ApplicationWindow ()
 
 void ApplicationWindow::setFile (QString fileName)
 {
-  resize (paint->openImage (fileName));
+  resize (extractor->openImage (fileName));
 }
 
 
 void ApplicationWindow::setProfiler (Profiler *prof)
 {
-  paint->setProfiler (prof);
+  extractor->setProfiler (prof);
 }
 
 
@@ -51,7 +52,7 @@ void ApplicationWindow::open ()
                                      tr ("Open File"), QDir::currentPath ());
   if (! fileName.isEmpty ())
   {
-    windowSize = paint->openImage (fileName);
+    windowSize = extractor->openImage (fileName);
     updateActions ();
   }
   resize (windowSize);
@@ -112,5 +113,5 @@ bool ApplicationWindow::saveFile (const QByteArray &fileFormat)
                            .arg(QString(fileFormat.toUpper()))
                            .arg(QString(fileFormat)));
   if (fileName.isEmpty ()) return false;
-  else return paint->saveImage (fileName, fileFormat);
+  else return extractor->saveImage (fileName, fileFormat);
 }

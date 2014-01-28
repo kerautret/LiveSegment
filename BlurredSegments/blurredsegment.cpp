@@ -1,14 +1,9 @@
 #include <cstdlib>
-#include "BlurredSegment.h"
+#include "blurredsegment.h"
 #include "color.h"
 #include "point2d.h"
 #include "util.h"
-#include "pointset.h"
-
-
-
-
-
+#include "linetool.h"
 
 
 
@@ -34,15 +29,10 @@ BlurredSegment::~BlurredSegment(){
 
 
 
-
-
-
-
-QPoint
+Pixel
 BlurredSegment::getCenter(){
-  return QPoint(point1.getX(),point1.getY());
+  return Pixel(point1.getX(),point1.getY());
 }
-
 
 
 
@@ -92,7 +82,6 @@ BlurredSegment::addPoint(Point2D p, Direction d){
 
 
 
-
 ConvexHull *
 BlurredSegment::getConvexHull(){
   return convexhull;
@@ -101,18 +90,18 @@ BlurredSegment::getConvexHull(){
 
 
 vector<Point2D>
-BlurredSegment::getListePixel(){
+BlurredSegment::getListePoint2D(){
   return vectorPixel;
 }
 
 
-vector<QPoint>
-BlurredSegment::getListeQPoint(){
-  vector<QPoint> vectResult;
+vector<Pixel>
+BlurredSegment::getListePixel(){
+  vector<Pixel> vectResult;
   vector<Point2D>::iterator iter = vectorPixel.begin();
   while( iter !=vectorPixel.end()){
     Point2D p = *iter;
-    vectResult.push_back(QPoint(p.getX(),p.getY()));
+    vectResult.push_back(Pixel(p.getX(),p.getY()));
     iter++;
   }  
   return vectResult;
@@ -127,13 +116,10 @@ BlurredSegment::getThickness(){
 
 
 
-
-
 double 
 BlurredSegment::getMaxThickness(){
   return maxThickness; 
 }
-
 
 
 
@@ -159,13 +145,11 @@ BlurredSegment::getDirection(){
 
 
 
-
-
-vector<QPoint> 
+vector<Pixel> 
 BlurredSegment::getPrintedPoints(){
   Point2D d = lastLeftPointAdded;
   Point2D f = lastRightPointAdded;
-  vector<QPoint> vectResult;
+  vector<Pixel> vectResult;
   
   
   double apvh = (double)convexhull->getAPV().height();
@@ -219,14 +203,14 @@ BlurredSegment::getPrintedPoints(){
     double p6[2] = {Xmax, a*(double)(Xmax)+b2};
     
     
-    vector<QPoint> droiteSup = PointSet::tracerSegment(QPoint(p3[0],p3[1]),
-								      QPoint(p4[0],p4[1]));
+    vector<Pixel> droiteSup = LineTool::draw (Pixel (p3[0], p3[1]),
+                                          Pixel (p4[0], p4[1]));
     
-    vector<QPoint> droiteInf = PointSet::tracerSegment(QPoint(p5[0],p5[1]),
-								      QPoint(p6[0],p6[1]));
+    vector<Pixel> droiteInf = LineTool::draw (Pixel (p5[0], p5[1]),
+                                          Pixel (p6[0], p6[1]));
     
-    PointSet::fusionVector(vectResult, droiteSup);
-    PointSet::fusionVector(vectResult, droiteInf);
+    LineTool::merge (vectResult, droiteSup);
+    LineTool::merge (vectResult, droiteInf);
     
     
 //     cout << "\n" << styleLineXFIG      
@@ -264,18 +248,15 @@ BlurredSegment::getPrintedPoints(){
 	p6[1] = Ymax;
       }
       
-
-      vector<QPoint> droiteSup = PointSet::tracerSegment(QPoint(p3[0],p3[1]),
-									QPoint(p4[0],p4[1]));
+      vector<Pixel> droiteSup = LineTool::draw (Pixel (p3[0], p3[1]),
+                                            Pixel (p4[0], p4[1]));
       
-      vector<QPoint> droiteInf = PointSet::tracerSegment(QPoint(p5[0],p5[1]),
-									QPoint(p6[0],p6[1]));
+      vector<Pixel> droiteInf = LineTool::draw (Pixel (p5[0], p5[1]),
+                                            Pixel (p6[0], p6[1]));
       
-      PointSet::fusionVector(vectResult, droiteSup);
-      PointSet::fusionVector(vectResult, droiteInf);
+      LineTool::merge (vectResult, droiteSup);
+      LineTool::merge (vectResult, droiteInf);
       
-
-
 
 //       cout << "\n" << styleLineXFIG  
 // 	   << "\n" << (int) p4[0]*RESOLUTION << " " << (int)p4[1]*RESOLUTION << " "
@@ -284,27 +265,21 @@ BlurredSegment::getPrintedPoints(){
 // 	   << (int)p5[0]*RESOLUTION << " " << (int)p5[1]*RESOLUTION << " " 
 // 	   << (int) p4[0]*RESOLUTION << " " << (int) p4[1]*RESOLUTION <<endl;
 //   }
-
-      
-      
   }
-
-  
   return vectResult;
 }
+
 
 // ------------------------------------------------------
 // Test de la fonction de construction de segments flous.
 
 // int main(int argc, char *argv[])
 // {
-  
-  
-
 //   ImaGene::Arguments args;  
 //   args.addOption("-e", "-e epaisseur", "1");
 //   args.addBooleanOption("-affichePixels", "-affichePixels");
-//   args.addBooleanOption("-afficheEnvloppeConvexe", "-afficheEnvloppeConvexe");
+//   args.addBooleanOption("-afficheEnvloppeConvexe",
+//                         "-afficheEnvloppeConvexe");
   
   
 //   if ( ! args.readArguments( argc, argv )){
@@ -314,15 +289,10 @@ BlurredSegment::getPrintedPoints(){
 // 	 << endl;
 //   }
   
-  
-  
-  
 //   Point2D p1(0,0);
 //   Point2D p2(-1,2);
 //   Point2D p3(3,0);
   
-  
-  
 //   int epaisseur = args.getOption("-e")->getIntValue(0);
 //   BlurredSegment blurSeg(p1,p2,p3, epaisseur);
   
@@ -331,9 +301,6 @@ BlurredSegment::getPrintedPoints(){
 //   blurSeg.addPoint(Point2D(6,-1), RIGHT);
 //   blurSeg.addPoint(Point2D(8,1), RIGHT);
   
-  
-  
-  
 //   int epaisseur = args.getOption("-e")->getIntValue(0);
 //   BlurredSegment blurSeg(p1,p2,p3, epaisseur);
   
@@ -341,11 +308,9 @@ BlurredSegment::getPrintedPoints(){
 //   blurSeg.addPoint(Point2D(3,2), RIGHT);
 //   blurSeg.addPoint(Point2D(6,-1), RIGHT);
 //   blurSeg.addPoint(Point2D(8,1), RIGHT);
-  
-  
   
 //   if(args.check("-affichePixels")){
-//     vector<Point2D> vectPixel = blurSeg.getListePixel();
+//     vector<Point2D> vectPixel = blurSeg.getListePoint2D();
 //     vector<Point2D>::iterator iter = vectPixel.begin();
 //     while( iter !=vectPixel.end()){
 //       Point2D p = *iter;
@@ -354,15 +319,9 @@ BlurredSegment::getPrintedPoints(){
 //     }
 //   }
   
-  
 //   if(args.check("-afficheEnvloppeConvexe")){
 //     blurSeg.getConvexHull()->afficheConvex(Color());
 //   }
 
-  
-  
 //   return EXIT_SUCCESS;  
 // }
-
-
-

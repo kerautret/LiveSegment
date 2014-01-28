@@ -2,8 +2,9 @@
 #include <iostream>
 #include <QtGui>
 #include "profile.h"
-#include "pointset.h"  /*Tempo*/
-#include "localvariations.h"
+#include "linetool.h"   /*Tempo*/
+#include "imagedata.h"  /*pour la recherche de min sur la correl*/
+
 using namespace std;
 
 
@@ -72,12 +73,16 @@ void Profile::paint (QPainter *painter,
   }
   else if (display == 5)
   {
-    if (correlMethod == 0) setMeanCorrelationStripes ();
-    else if (correlMethod == 1) setFull2dCorrelationStripes ();
+    bool ok = false;
+    if (correlMethod == 0) ok = setMeanCorrelationStripes ();
+    else if (correlMethod == 1) ok = setFull2dCorrelationStripes ();
     else // correlMethod == 2
-      setMean2dCorrelationStripes ();
-    paintStripes (painter);
-    paintCorrelationProfile (painter);
+      ok = setMean2dCorrelationStripes ();
+    if (ok)
+    {
+      paintStripes (painter);
+      paintCorrelationProfile (painter);
+    }
     painter->drawText (100, 20, QString ("B : Correl width = ")
                                 + QString::number (correlWidth));
     painter->drawText (100, 40, QString ("V : Correl thick = ")
@@ -92,7 +97,7 @@ void Profile::paint (QPainter *painter,
 }
 
 
-void Profile::setImage (QImage *image, QPoint **grad)
+void Profile::setImage (QImage *image, Pixel **grad)
 {
   this->image = image;
   this->grad = grad;
@@ -113,21 +118,21 @@ void Profile::clear ()
 }
 
 
-void Profile::addCentral (QPoint p1, QPoint p2)
+void Profile::addCentral (Pixel p1, Pixel p2)
 {
   this->pt1 = p1;
   this->pt2 = p2;
 }
 
 
-void Profile::addToRight (vector<QPoint> pts)
+void Profile::addToRight (vector<Pixel> pts)
 {
   rightscan.push_back (pts);
   minStripe = 1 - rightscan.size ();
 }
 
 
-void Profile::addToLeft (vector<QPoint> pts)
+void Profile::addToLeft (vector<Pixel> pts)
 {
   leftscan.push_back (pts);
   maxStripe = leftscan.size () - 1;
@@ -191,7 +196,7 @@ void Profile::toggleMeanCorrel ()
   * Compares portions of scan bars with a profile extracted at
   * the first scan centered on the blurred segment.
   */
-void Profile::setCorrelationStripes (QPoint p1, QPoint p2, int segwidth)
+void Profile::setCorrelationStripes (Pixel p1, Pixel p2, int segwidth)
 {
   leftCorrel.clear ();
   rightCorrel.clear ();
@@ -205,8 +210,8 @@ void Profile::setCorrelationStripes (QPoint p1, QPoint p2, int segwidth)
   }
 
   // Gets the central index
-  QPoint pc ((p1.x () + p2.x ()) / 2, (p1.y () + p2.y ()) / 2);
-  vector<QPoint>::iterator it = leftscan.at(0).begin ();
+  Pixel pc ((p1.x () + p2.x ()) / 2, (p1.y () + p2.y ()) / 2);
+  vector<Pixel>::iterator it = leftscan.at(0).begin ();
   int dist, pos = 0, minPos = 0;
   int minDist = (pc.x() - (*it).x()) * (pc.x() - (*it).x())
                 + (pc.y() - (*it).y()) * (pc.y() - (*it).y());
@@ -234,17 +239,17 @@ void Profile::setCorrelationStripes (QPoint p1, QPoint p2, int segwidth)
   int *centralShape = new int[correlWidth];
   for (int i = 0; i < correlWidth; i++)
   {
-    QPoint pix = leftscan.at(0).at(minPos-correlWidth/2+i);
+    Pixel pix = leftscan.at(0).at(minPos-correlWidth/2+i);
     centralShape[i] = ((QColor) image->pixel (QPoint (pix.x (),
                                   imageHeight - 1 - pix.y ()))).value ();
   }
 
   // Computes the left correlation stripes
-  vector <vector <QPoint> >::iterator scit = leftscan.begin ();
+  vector <vector <Pixel> >::iterator scit = leftscan.begin ();
   while (scit != leftscan.end ())
   {
     vector<int> corr;
-    vector<double> recorr;
+    vector<long> recorr;
     if ((int) ((*scit).size ()) >= correlWidth)
     {
       for (int j = 0; j < ((int) (*scit).size ()) - correlWidth + 1; j++)
@@ -252,14 +257,14 @@ void Profile::setCorrelationStripes (QPoint p1, QPoint p2, int segwidth)
         int val = 0;
         for (int k = 0; k < correlWidth; k++)
         {
-          QPoint pix = (*scit).at(j+k);
+          Pixel pix = (*scit).at(j+k);
           int diff = ((QColor) image->pixel (QPoint (pix.x (),
                                   imageHeight - 1 - pix.y ()))).value ()
                      - centralShape[k];
           val += (diff < 0 ? - diff : diff);
         }
         corr.push_back (val);
-        recorr.push_back ((double) val);
+        recorr.push_back ((long) val);
       }
     }
     leftCorrel.push_back (corr);
@@ -272,7 +277,7 @@ void Profile::setCorrelationStripes (QPoint p1, QPoint p2, int segwidth)
   while (scit != rightscan.end ())
   {
     vector<int> corr;
-    vector<double> recorr;
+    vector<long> recorr;
     if ((int) ((*scit).size ()) >= correlWidth)
     {
       for (int j = 0; j < ((int) (*scit).size ()) - correlWidth + 1; j++)
@@ -280,14 +285,14 @@ void Profile::setCorrelationStripes (QPoint p1, QPoint p2, int segwidth)
         int val = 0;
         for (int k = 0; k < correlWidth; k++)
         {
-          QPoint pix = (*scit).at(j+k);
+          Pixel pix = (*scit).at(j+k);
           int diff = ((QColor) image->pixel (QPoint (pix.x (),
                                   imageHeight - 1 - pix.y ()))).value ()
                      - centralShape[k];
           val += (diff < 0 ? - diff : diff);
         }
         corr.push_back (val);
-        recorr.push_back (val);
+        recorr.push_back ((long) val);
       }
     }
     rightCorrel.push_back (corr);
@@ -301,7 +306,7 @@ void Profile::setCorrelationStripes (QPoint p1, QPoint p2, int segwidth)
   * Compares portions of scan bars with a mean profile extracted at
   * the center of the first Nth scans (N = correlThick).
   */
-void Profile::setMeanCorrelationStripes ()
+bool Profile::setMeanCorrelationStripes ()
 {
   leftCorrel.clear ();
   rightCorrel.clear ();
@@ -311,7 +316,7 @@ void Profile::setMeanCorrelationStripes ()
   if (correlWidth > (int) leftscan.at(0).size ())
   {
     cerr << "Can't get correlation stripes" << endl;
-    return;
+    return false;
   }
 
   // Gets the central template
@@ -321,7 +326,7 @@ void Profile::setMeanCorrelationStripes ()
     centralShape[i] = 0;
     for (int j = 0; j < correlThick; j++)
     {
-      QPoint pix = leftscan.at(j).at(minPos-correlWidth/2+i);
+      Pixel pix = leftscan.at(j).at(minPos-correlWidth/2+i);
       centralShape[i] += ((QColor) image->pixel (QPoint (pix.x (),
                                     imageHeight - 1 - pix.y ()))).value ();
     }
@@ -329,11 +334,11 @@ void Profile::setMeanCorrelationStripes ()
   }
 
   // Computes the left correlation stripes
-  vector <vector <QPoint> >::iterator scit = leftscan.begin ();
+  vector <vector <Pixel> >::iterator scit = leftscan.begin ();
   while (scit != leftscan.end ())
   {
     vector<int> corr;
-    vector<double> recorr;
+    vector<long> recorr;
     if ((int) ((*scit).size ()) >= correlWidth)
     {
       for (int j = 0; j < ((int) (*scit).size ()) - correlWidth + 1; j++)
@@ -341,14 +346,14 @@ void Profile::setMeanCorrelationStripes ()
         int val = 0;
         for (int k = 0; k < correlWidth; k++)
         {
-          QPoint pix = (*scit).at(j+k);
+          Pixel pix = (*scit).at(j+k);
           int diff = ((QColor) image->pixel (QPoint (pix.x (),
                                   imageHeight - 1 - pix.y ()))).value ()
                      - centralShape[k];
           val += (diff < 0 ? - diff : diff);
         }
         corr.push_back (val);
-        recorr.push_back ((double) val);
+        recorr.push_back ((long) val);
       }
     }
     leftCorrel.push_back (corr);
@@ -361,7 +366,7 @@ void Profile::setMeanCorrelationStripes ()
   while (scit != rightscan.end ())
   {
     vector<int> corr;
-    vector<double> recorr;
+    vector<long> recorr;
     if ((int) ((*scit).size ()) >= correlWidth)
     {
       for (int j = 0; j < ((int) (*scit).size ()) - correlWidth + 1; j++)
@@ -369,20 +374,21 @@ void Profile::setMeanCorrelationStripes ()
         int val = 0;
         for (int k = 0; k < correlWidth; k++)
         {
-          QPoint pix = (*scit).at(j+k);
+          Pixel pix = (*scit).at(j+k);
           int diff = ((QColor) image->pixel (QPoint (pix.x (),
                                   imageHeight - 1 - pix.y ()))).value ()
                      - centralShape[k];
           val += (diff < 0 ? - diff : diff);
         }
         corr.push_back (val);
-        recorr.push_back ((double) val);
+        recorr.push_back ((long) val);
       }
     }
     rightCorrel.push_back (corr);
     rightReCorrel.push_back (recorr);
     scit ++;
   }
+  return true;
 }
 
 
@@ -390,7 +396,7 @@ void Profile::setMeanCorrelationStripes ()
   * Compares 2D portions of scan bars (N = correlThick) with a 2D profile
   * extracted at the center of the first Nth scans (N = correlThick).
   */
-void Profile::setFull2dCorrelationStripes ()
+bool Profile::setFull2dCorrelationStripes ()
 {
   leftCorrel.clear ();
   rightCorrel.clear ();
@@ -399,13 +405,13 @@ void Profile::setFull2dCorrelationStripes ()
   if ((int) leftscan.size () <= correlThick)
   {
     cerr << "Can't get correlation stripes : not enough left scans" << endl;
-    return;
+    return false;
   }
   int minPos = (int) leftscan.at(0).size () / 2;
   if (correlWidth > (int) leftscan.at(0).size ())
   {
     cerr << "Can't get correlation stripes : scans too narrow" << endl;
-    return;
+    return false;
   }
 
   // Gets the central template
@@ -413,7 +419,7 @@ void Profile::setFull2dCorrelationStripes ()
   for (int i = 0; i < correlWidth; i++)
     for (int j = 0; j < correlThick; j++)
     {
-      QPoint pix = leftscan.at(j).at(minPos-correlWidth/2+i);
+      Pixel pix = leftscan.at(j).at(minPos-correlWidth/2+i);
       centralShape[j * correlWidth + i] = ((QColor) image->pixel (
                QPoint (pix.x (), imageHeight - 1 - pix.y ()))).value ();
     }
@@ -422,7 +428,7 @@ void Profile::setFull2dCorrelationStripes ()
   for (int i = 0; i < (int) leftscan.size () - correlThick - 2; i++)
   {
     vector<int> corr;
-    vector<double> recorr;
+    vector<long> recorr;
     if ((int) ((leftscan.at(i)).size ()) >= correlWidth)
       for (int j = 0; j < ((int) (leftscan.at(i)).size ()) - correlWidth; j++)
       {
@@ -431,14 +437,14 @@ void Profile::setFull2dCorrelationStripes ()
           for (int k = 0; k < correlWidth; k++)
             if ((int) leftscan.at(i+cw).size () > j+k)
             {
-              QPoint pix = (leftscan.at(i+cw)).at(j+k);
+              Pixel pix = (leftscan.at(i+cw)).at(j+k);
               int diff = ((QColor) image->pixel (QPoint (pix.x (),
                                     imageHeight - 1 - pix.y ()))).value ()
                        - centralShape[cw * correlWidth + k];
               val += (diff < 0 ? - diff : diff);
             }
         corr.push_back (val);
-        recorr.push_back ((double) val);
+        recorr.push_back ((long) val);
       }
     leftCorrel.push_back (corr);
     leftReCorrel.push_back (recorr);
@@ -448,7 +454,7 @@ void Profile::setFull2dCorrelationStripes ()
   for (int i = correlThick - 1; i < (int) rightscan.size () - 1; i++)
   {
     vector<int> corr;
-    vector<double> recorr;
+    vector<long> recorr;
     if ((int) ((rightscan.at(i)).size ()) >= correlWidth)
     {
       for (int j = 0; j < ((int) (rightscan.at(i)).size ()) - correlWidth; j++)
@@ -458,19 +464,20 @@ void Profile::setFull2dCorrelationStripes ()
           for (int k = 0; k < correlWidth; k++)
             if ((int) rightscan.at(i-cw).size () > j+k)
             {
-              QPoint pix = (rightscan.at(i-cw)).at(j+k);
+              Pixel pix = (rightscan.at(i-cw)).at(j+k);
               int diff = ((QColor) image->pixel (QPoint (pix.x (),
                                   imageHeight - 1 - pix.y ()))).value ()
                      - centralShape[cw * correlWidth + k];
               val += (diff < 0 ? - diff : diff);
             }
         corr.push_back (val);
-        recorr.push_back ((double) val);
+        recorr.push_back ((long) val);
       }
     }
     rightCorrel.push_back (corr);
     rightReCorrel.push_back (recorr);
   }
+  return true;
 }
 
 
@@ -480,7 +487,7 @@ void Profile::setFull2dCorrelationStripes ()
   * Compares mean portions of scan bars (N = correlThick) with a mean
   * profile extracted at the center of the first Nth scans (N = correlThick).
   */
-void Profile::setMean2dCorrelationStripes ()
+bool Profile::setMean2dCorrelationStripes ()
 {
   leftCorrel.clear ();
   rightCorrel.clear ();
@@ -489,13 +496,13 @@ void Profile::setMean2dCorrelationStripes ()
   if ((int) leftscan.size () <= correlThick)
   {
     cerr << "Can't get correlation stripes : not enough left scans" << endl;
-    return;
+    return false;
   }
   int minPos = (int) leftscan.at(0).size () / 2;
   if (correlWidth > (int) leftscan.at(0).size ())
   {
     cerr << "Can't get correlation stripes : scans too narrow" << endl;
-    return;
+    return false;
   }
 
   // Gets the central template
@@ -505,7 +512,7 @@ void Profile::setMean2dCorrelationStripes ()
     centralShape[i] = 0;
     for (int j = 0; j < correlThick; j++)
     {
-      QPoint pix = leftscan.at(j).at(minPos-correlWidth/2+i);
+      Pixel pix = leftscan.at(j).at(minPos-correlWidth/2+i);
       centralShape[i] += ((QColor) image->pixel (
                QPoint (pix.x (), imageHeight - 1 - pix.y ()))).value ();
     }
@@ -516,7 +523,7 @@ void Profile::setMean2dCorrelationStripes ()
   for (int i = 0; i < (int) leftscan.size () - correlThick - 2; i++)
   {
     vector<int> corr;
-    vector<double> recorr;
+    vector<long> recorr;
     if ((int) ((leftscan.at(i)).size ()) >= correlWidth)
       for (int j = 0; j < ((int) (leftscan.at(i)).size ()) - correlWidth; j++)
       {
@@ -530,7 +537,7 @@ void Profile::setMean2dCorrelationStripes ()
             if ((int) leftscan.at(i+cw).size () > j+k)
             {
               nbval ++;
-              QPoint pix = (leftscan.at(i+cw)).at(j+k);
+              Pixel pix = (leftscan.at(i+cw)).at(j+k);
               locval += ((QColor) image->pixel (QPoint (pix.x (),
                                     imageHeight - 1 - pix.y ()))).value ();
             }
@@ -539,7 +546,7 @@ void Profile::setMean2dCorrelationStripes ()
           val += (diff < 0 ? - diff : diff);
         }
         corr.push_back (val);
-        recorr.push_back ((double) val);
+        recorr.push_back ((long) val);
       }
     leftCorrel.push_back (corr);
     leftReCorrel.push_back (recorr);
@@ -549,7 +556,7 @@ void Profile::setMean2dCorrelationStripes ()
   for (int i = correlThick - 1; i < (int) rightscan.size () - 1; i++)
   {
     vector<int> corr;
-    vector<double> recorr;
+    vector<long> recorr;
     if ((int) ((rightscan.at(i)).size ()) >= correlWidth)
     {
       for (int j = 0; j < ((int) (rightscan.at(i)).size ()) - correlWidth; j++)
@@ -564,7 +571,7 @@ void Profile::setMean2dCorrelationStripes ()
             if ((int) rightscan.at(i-cw).size () > j+k)
             {
               nbval ++;
-              QPoint pix = (rightscan.at(i-cw)).at(j+k);
+              Pixel pix = (rightscan.at(i-cw)).at(j+k);
               locval += ((QColor) image->pixel (QPoint (pix.x (),
                                   imageHeight - 1 - pix.y ()))).value ();
             }
@@ -573,12 +580,13 @@ void Profile::setMean2dCorrelationStripes ()
           val += (diff < 0 ? - diff : diff);
         }
         corr.push_back (val);
-        recorr.push_back ((double) val);
+        recorr.push_back ((long) val);
       }
     }
     rightCorrel.push_back (corr);
     rightReCorrel.push_back (recorr);
   }
+  return true;
 }
 
 
@@ -589,11 +597,11 @@ void Profile::paintFirstScans (QPainter *painter)
 {
   if (! rightscan.empty ())
   {
-    vector <QPoint> sc = rightscan.at (0);
+    vector <Pixel> sc = rightscan.at (0);
     int widi = sc.size ();
     int cx = (sc.at (widi / 2)).x ();
     int cy = (sc.at (widi / 2)).y ();
-    vector<QPoint>::iterator it = sc.begin ();
+    vector<Pixel>::iterator it = sc.begin ();
     while (it != sc.end ())
     {
       int x = ((*it).x() - cx) * resolLoop + widWidth / 2;
@@ -678,16 +686,16 @@ void Profile::paintScans (QPainter *painter, int val)
 {
   QColor cols[] = {Qt::green, Qt::red, Qt::blue};
   int colnum = 0;
-  QPoint p1, p2;
+  Pixel p1, p2;
   if (val == 0) iter = 0;
   else if (val == 1) iter ++;
   else if (val == -1) iter --;
 
   int first = 1, cx = 0, cy = 0;
-  vector <vector <QPoint> >::iterator bigit = rightscan.begin ();
+  vector <vector <Pixel> >::iterator bigit = rightscan.begin ();
   while (bigit != rightscan.end ())
   {
-    vector<QPoint> scan = *bigit;
+    vector<Pixel> scan = *bigit;
     int widi = scan.size ();
     if (widi != 0)
     {
@@ -698,7 +706,7 @@ void Profile::paintScans (QPainter *painter, int val)
         first = 0;
       }
 
-      vector<QPoint>::iterator it = scan.begin ();
+      vector<Pixel>::iterator it = scan.begin ();
       while (it != scan.end ())
       {
         int x = ((*it).x() - cx) * resolScan + 300;
@@ -716,11 +724,11 @@ void Profile::paintScans (QPainter *painter, int val)
   bigit = leftscan.begin ();
   while (bigit != leftscan.end ())
   {
-    vector<QPoint> scan = *bigit;
+    vector<Pixel> scan = *bigit;
     int widi = scan.size ();
     if (widi != 0)
     {
-      vector<QPoint>::iterator it = scan.begin ();
+      vector<Pixel>::iterator it = scan.begin ();
       while (it != scan.end ())
       {
         int x = ((*it).x() - cx) * resolScan + 300;
@@ -736,8 +744,8 @@ void Profile::paintScans (QPainter *painter, int val)
     bigit ++;
   }
 
-  vector<QPoint> pts = PointSet::tracerSegment (pt1, pt2, iter);
-  vector<QPoint>::iterator it = pts.begin ();
+  vector<Pixel> pts = LineTool::draw (pt1, pt2, iter);
+  vector<Pixel>::iterator it = pts.begin ();
   while (it != pts.end ())
   {
     int x = ((*it).x() - cx) * resolScan + 300;
@@ -759,13 +767,13 @@ void Profile::paintStripes (QPainter *painter)
   painter->drawRect (profileWidth + stripeMargin - 1, stripeMargin - 1,
                      stripeWidth + 2, widHeight - 2 * stripeMargin + 2);
 
-  vector <vector <QPoint> >::iterator bigit = rightscan.begin ();
+  vector <vector <Pixel> >::iterator bigit = rightscan.begin ();
   while (cy <= widWidth - stripeMargin - resolStripe
          && bigit != rightscan.end ())
   {
     cx = lx;
-    vector<QPoint> scan = *bigit;
-    vector<QPoint>::iterator it = scan.begin ();
+    vector<Pixel> scan = *bigit;
+    vector<Pixel>::iterator it = scan.begin ();
     while (cx < widWidth - stripeMargin - resolStripe && it != scan.end ())
     {
       if (cx >= profileWidth + stripeMargin)
@@ -783,8 +791,8 @@ void Profile::paintStripes (QPainter *painter)
   while (cy >= 5 && bigit != leftscan.end ())
   {
     cx = lx;
-    vector<QPoint> scan = *bigit;
-    vector<QPoint>::iterator it = scan.begin ();
+    vector<Pixel> scan = *bigit;
+    vector<Pixel>::iterator it = scan.begin ();
     while (cx < widHeight - stripeMargin - resolStripe && it != scan.end ())
     {
       if (cx >= profileWidth + stripeMargin)
@@ -810,11 +818,11 @@ void Profile::paintProfile (QPainter *painter)
 {
   if (rightscan.size () || leftscan.size ())
   {
-    vector<QPoint> scan;
+    vector<Pixel> scan;
     if (stripe >= 0) scan = leftscan.at (stripe);
     else scan = rightscan.at (- stripe - 1);
     int h, cx = 0, w = profileWidth / scan.size ();
-    vector<QPoint>::iterator it = scan.begin ();
+    vector<Pixel>::iterator it = scan.begin ();
     while (it != scan.end ())
     {
       if ((*it).x () < 0 || (*it).x () >= imageWidth
@@ -864,12 +872,12 @@ void Profile::paintGradientProfile (QPainter *painter)
 {
   if (rightscan.size () || leftscan.size ())
   {
-    QPoint gr;
-    vector<QPoint> scan;
+    Pixel gr;
+    vector<Pixel> scan;
     if (stripe >= 0) scan = leftscan.at (stripe);
     else scan = rightscan.at (- stripe - 1);
     int h, cx = 0, w = profileWidth / scan.size ();
-    vector<QPoint>::iterator it = scan.begin ();
+    vector<Pixel>::iterator it = scan.begin ();
     while (it != scan.end ())
     {
       if ((*it).x () < 0 || (*it).x () >= imageWidth
@@ -924,9 +932,9 @@ void Profile::paintCorrelationProfile (QPainter *painter)
 {
   if (rightCorrel.size () || leftCorrel.size ())
   {
-    QPoint gr;
+    Pixel gr;
     vector<int> scan;
-    vector<double> rescan;
+    vector<long> rescan;
     if (stripe >= 0)
     {
       scan = leftCorrel.at (stripe);
@@ -949,12 +957,15 @@ void Profile::paintCorrelationProfile (QPainter *painter)
       cx += w;
     }
 
-    vector<int> locs = LocalVariations::getLocalMinimaIndices (rescan, 0.0001, false);
+    ImageData *idata = new ImageData (1, 1);
+    vector<int> locs = idata->getLocalMinimaIndices (rescan);
+    delete idata;
     it = locs.begin ();
     while (it != locs.end ())
     {
       h = (int) (scan.at(*it) * correlRatio + 0.5);
-      painter->fillRect ((*it) * w + 4, widHeight - h - 14, w - 8, 10, QBrush (Qt::red));
+      painter->fillRect ((*it) * w + 4, widHeight - h - 14, w - 8, 10,
+                         QBrush (Qt::red));
       it ++;
     }
 

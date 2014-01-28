@@ -4,6 +4,7 @@
 #include <QGraphicsItem>
 #include <QImage>
 #include "directionalscan.h"
+#include "pixel.h"
 
 
 class Profile : public QGraphicsItem
@@ -16,11 +17,11 @@ public:
   void paint (QPainter *painter,
               const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-  void setImage (QImage *image, QPoint **grad);
+  void setImage (QImage *image, Pixel **grad);
   void clear ();
-  void addCentral (QPoint p1, QPoint p2);
-  void addToRight (vector<QPoint> pts);
-  void addToLeft (vector<QPoint> pts);
+  void addCentral (Pixel p1, Pixel p2);
+  void addToRight (vector<Pixel> pts);
+  void addToLeft (vector<Pixel> pts);
   void setDisplay (int disp);
   void incStripe (int inc);
   void incCorrelWidth (int down);
@@ -52,16 +53,16 @@ private:
   int stripeMargin;    // Stripe area margin width
 
   QImage *image;
-  QPoint **grad;
+  Pixel **grad;
   int imageWidth, imageHeight;
-  QPoint pt1, pt2;
-  vector <vector <QPoint> > leftscan;
-  vector <vector <QPoint> > rightscan;
+  Pixel pt1, pt2;
+  vector <vector <Pixel> > leftscan;
+  vector <vector <Pixel> > rightscan;
 
   vector <vector <int> > leftCorrel;
   vector <vector <int> > rightCorrel;
-  vector <vector <double> > leftReCorrel;    // Just for local minima extraction
-  vector <vector <double> > rightReCorrel;
+  vector <vector <long> > leftReCorrel;    // Just for local minima extraction
+  vector <vector <long> > rightReCorrel;
 
   int display;         // Current display (all scans, first scans or profiles)
   int resolScan;       // All scans points zoom factor
@@ -72,10 +73,10 @@ private:
   int minStripe;       // Min stripe index (right scan size)
   int maxStripe;       // Max stripe index (left scan size)
 
-  void setCorrelationStripes (QPoint p1, QPoint p2, int segwidth);
-  void setMeanCorrelationStripes ();
-  void setFull2dCorrelationStripes ();
-  void setMean2dCorrelationStripes ();
+  void setCorrelationStripes (Pixel p1, Pixel p2, int segwidth);
+  bool setMeanCorrelationStripes ();
+  bool setFull2dCorrelationStripes ();
+  bool setMean2dCorrelationStripes ();
 
   void paintFirstScans (QPainter *painter);
   void paintScans (QPainter *painter, int val);

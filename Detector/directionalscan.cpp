@@ -1,11 +1,11 @@
 #include <cstdlib>
 #include <iostream>
 #include "directionalscan.h"
-#include "pointset.h"
+#include "linetool.h"
 #include "util.h"    // Direction et cmath
 
 
-DirectionalScan::DirectionalScan (QPoint p1, QPoint p2)
+DirectionalScan::DirectionalScan (Pixel p1, Pixel p2)
 {
   this->p1 = p1;
   this->p2 = p2;
@@ -15,7 +15,7 @@ DirectionalScan::DirectionalScan (QPoint p1, QPoint p2)
 }
 
 
-DirectionalScan::DirectionalScan (QPoint p1, QPoint p2, double directionAngle)
+DirectionalScan::DirectionalScan (Pixel p1, Pixel p2, double directionAngle)
 {
   this->p1 = p1;
   this->p2 = p2;
@@ -33,18 +33,14 @@ DirectionalScan::DirectionalScan (QPoint p1, QPoint p2, double directionAngle)
 }
 
 
-DirectionalScan::DirectionalScan ()
-{
-}
 
-
-vector<QPoint> DirectionalScan::getVectPoints ()
+vector<Pixel> DirectionalScan::getVectPoints ()
 {
   return vectPoints;
 }
 
 
-vector<QPoint> DirectionalScan::getScan (int num, int direction)
+vector<Pixel> DirectionalScan::getScan (int num, int direction)
 {
   if (! isScanDefined (num, direction))
   {
@@ -56,9 +52,9 @@ vector<QPoint> DirectionalScan::getScan (int num, int direction)
 }
 
 
-vector<QPoint> DirectionalScan::getScanOrientedIndex (int num, int direction)
+vector<Pixel> DirectionalScan::getScanOrientedIndex (int num, int direction)
 {
-  vector<QPoint> vResult;
+  vector<Pixel> vResult;
   if (! isScanDefined (num, direction))
   {
     cerr << "Trying to get an undefined scan at " << num
@@ -84,13 +80,13 @@ bool DirectionalScan::isScanDefined (int num, int direction)
 }
 
 
-vector<QPoint> DirectionalScan::getLeftScan (int num)
+vector<Pixel> DirectionalScan::getLeftScan (int num)
 {
   return vectLeftScan.at (num);
 }
 
 
-vector<QPoint> DirectionalScan::getRightScan (int num)
+vector<Pixel> DirectionalScan::getRightScan (int num)
 {
   return vectRightScan.at (num);
 }
@@ -114,14 +110,14 @@ int DirectionalScan::getNbRightScan ()
 }
 
 
-QPoint *DirectionalScan::retTabDeplacements (int direction)
+Pixel *DirectionalScan::retTabDeplacements (int direction)
 {
   int tailleDeplacements = this->retTailleMotif ();
-  QPoint* vresult = new QPoint[tailleDeplacements];
+  Pixel* vresult = new Pixel[tailleDeplacements];
   for (int i = 0; i < tailleDeplacements; i++)
   {
-    QPoint dep = tabDeplacements[i];
-    vresult[i]= QPoint ((direction == RIGHT) ?  dep.y () : -dep.y (),
+    Pixel dep = tabDeplacements[i];
+    vresult[i]= Pixel ((direction == RIGHT) ?  dep.y () : -dep.y (),
 		        (direction == RIGHT) ? -dep.x () :  dep.x ());
   }
   return vresult;
@@ -157,7 +153,7 @@ int DirectionalScan::retOctantDroiteD1 ()
 }
 
 
-bool DirectionalScan::isRight (QPoint p)
+bool DirectionalScan::isRight (Pixel p)
 {
   int ux = p2.x () - p1.x ();
   int uy = p2.y () - p1.y ();
@@ -167,7 +163,7 @@ bool DirectionalScan::isRight (QPoint p)
 }
 
 
-bool DirectionalScan::isBetweenLines (QPoint p)
+bool DirectionalScan::isBetweenLines (Pixel p)
 {
   return (a1 * p.x() - b1 * p.y() <= mu1 && a2 *p.x() - b2 * p.y() >= mu2);
 }
@@ -225,18 +221,18 @@ void DirectionalScan::calcDroites (double directionAngle)
 }
 
 
-void DirectionalScan::computeMotif (QPoint p1, QPoint p2)
+void DirectionalScan::computeMotif (Pixel p1, Pixel p2)
 {
-  vectPoints = PointSet::tracerSegment (p1, p2);
-  vector<QPoint>::iterator iter = vectPoints.begin ();
-  tabDeplacements = new QPoint[vectPoints.size() - 1];
+  vectPoints = LineTool::draw (p1, p2);
+  vector<Pixel>::iterator iter = vectPoints.begin ();
+  tabDeplacements = new Pixel[vectPoints.size() - 1];
   int i = 0;
-  QPoint pointLast = *iter;
+  Pixel pointLast = *iter;
   iter ++;
   while (iter != vectPoints.end ())
   {
-    QPoint p = *iter;
-    tabDeplacements[i] = QPoint (p.x () - pointLast.x (),
+    Pixel p = *iter;
+    tabDeplacements[i] = Pixel (p.x () - pointLast.x (),
                                  p.y () - pointLast.y ());
     i ++;
     iter ++;
@@ -245,12 +241,12 @@ void DirectionalScan::computeMotif (QPoint p1, QPoint p2)
 }
 
 
-QPoint *DirectionalScan::inverseSensMotif (QPoint *tabDepl, int taille)
+Pixel *DirectionalScan::inverseSensMotif (Pixel *tabDepl, int taille)
 {
-  QPoint *result = new QPoint [taille];
+  Pixel *result = new Pixel [taille];
   for (int i = 0; i < taille; i++)
   {
-    result[i] = QPoint (- tabDepl[taille-i-1].x(), - tabDepl[taille-i-1].y());
+    result[i] = Pixel (- tabDepl[taille-i-1].x(), - tabDepl[taille-i-1].y());
   }
   return result;
 }
@@ -258,7 +254,7 @@ QPoint *DirectionalScan::inverseSensMotif (QPoint *tabDepl, int taille)
 
 void DirectionalScan::addPixel (int x, int y)
 {
-  vectPoints.push_back (QPoint (x, y));
+  vectPoints.push_back (Pixel (x, y));
 }
 
 
@@ -273,14 +269,14 @@ void DirectionalScan::computeAllScans (int xmin, int ymin, int xmax, int ymax)
 }
 
 
-vector<QPoint> DirectionalScan::inverseVector (vector<QPoint> &v)
+vector<Pixel> DirectionalScan::inverseVector (vector<Pixel> &v)
 {
-  vector<QPoint> vResult;
-  vector<QPoint>::iterator iter = v.end ();
+  vector<Pixel> vResult;
+  vector<Pixel>::iterator iter = v.end ();
   while (iter != v.begin ())
   {
     iter --;
-    QPoint p = *iter;
+    Pixel p = *iter;
     vResult.push_back (p);
   }
   return vResult;
@@ -292,58 +288,58 @@ void DirectionalScan::computeScans (int xmin, int ymin, int xmax, int ymax,
 {
   computeMotif (p1, p2);
   int tailleDeplacements = this->retTailleMotif ();
-  QPoint pointCourant (p1.x (), p1.y ());
+  Pixel pointCourant (p1.x (), p1.y ());
 
   bool aInverser = false;
   if ((directionOctant % 2 == 0 && direction == RIGHT)
       || (directionOctant % 2 == 1 && direction == LEFT))
   {
     tabDeplacements = inverseSensMotif (tabDeplacements, tailleDeplacements);
-    pointCourant = QPoint (p2.x (), p2.y ());
+    pointCourant = Pixel (p2.x (), p2.y ());
     aInverser = true;
   }
 
-  QPoint pInit = pointCourant;
+  Pixel pInit = pointCourant;
   int posInit = 0;
   int posTabCourante = 0;
   
   while (pointCourant.x () < xmax && pointCourant.x () > xmin
-	 && pointCourant.y () > ymin && pointCourant.y () < ymax)
+         && pointCourant.y () > ymin && pointCourant.y () < ymax)
   {
-    vector<QPoint> vectToadd;
+    vector<Pixel> vectToadd;
     posTabCourante = posInit;
     pointCourant = pInit;
     if (directionOctant == 1 || directionOctant == 8)
-      pointCourant = QPoint (pointCourant.x () + (direction == RIGHT ? 1 : -1),
+      pointCourant = Pixel (pointCourant.x () + (direction == RIGHT ? 1 : -1),
                              pointCourant.y ());
     else if (directionOctant == 2 || directionOctant == 3)
-      pointCourant = QPoint (pointCourant.x (),
+      pointCourant = Pixel (pointCourant.x (),
                              pointCourant.y () + (direction == RIGHT ? 1 : -1));
     else if (directionOctant == 4 || directionOctant == 5)
-      pointCourant = QPoint (pointCourant.x () + (direction == RIGHT ? -1 : 1),
+      pointCourant = Pixel (pointCourant.x () + (direction == RIGHT ? -1 : 1),
                              pointCourant.y ());
     else if (directionOctant == 6 || directionOctant == 7)
-      pointCourant = QPoint (pointCourant.x (),
+      pointCourant = Pixel (pointCourant.x (),
                              pointCourant.y () + (direction == RIGHT ? -1 : 1));
         
-    QPoint ptdeplacement = tabDeplacements[posTabCourante];
+    Pixel ptdeplacement = tabDeplacements[posTabCourante];
     bool premierPointAjoute = false;
  
     while (isBetweenLines (pointCourant) || (! premierPointAjoute))
     {
       if (isBetweenLines (pointCourant))
       {
-	if (pointCourant.x () < xmax && pointCourant.x () > xmin
-	    && pointCourant.y () > ymin && pointCourant.y () < ymax)
-	  vectToadd.push_back (pointCourant);
-	if (! premierPointAjoute)
+        if (pointCourant.x () < xmax && pointCourant.x () > xmin
+            && pointCourant.y () > ymin && pointCourant.y () < ymax)
+          vectToadd.push_back (pointCourant);
+        if (! premierPointAjoute)
         {
-	  premierPointAjoute = true;
-	  posInit = posTabCourante;
-	  pInit = pointCourant;
-	}
+          premierPointAjoute = true;
+          posInit = posTabCourante;
+          pInit = pointCourant;
+        }
       }
-      pointCourant = QPoint (pointCourant.x () + ptdeplacement.x (),
+      pointCourant = Pixel (pointCourant.x () + ptdeplacement.x (),
                              pointCourant.y () + ptdeplacement.y ());
       posTabCourante= (posTabCourante + 1) % tailleDeplacements;
       ptdeplacement = tabDeplacements[posTabCourante];
@@ -355,30 +351,112 @@ void DirectionalScan::computeScans (int xmin, int ymin, int xmax, int ymax,
     if (isAllInImage)
     {
       if (direction == RIGHT)
-	this->vectRightScan.push_back (vectToadd);
+        this->vectRightScan.push_back (vectToadd);
       else
-	this->vectLeftScan.push_back (vectToadd);
+        this->vectLeftScan.push_back (vectToadd);
     }
   }
 }
 
 
-bool DirectionalScan::isInImageBounds (QPoint &p)
+bool DirectionalScan::isInImageBounds (Pixel &p)
 {
   return ((p.x () < xmax) && (p.y () < ymax)
            && (p.y() >= ymin) && (p.x () >= xmin));
 }
 
 
-bool DirectionalScan::isInImageBounds (vector<QPoint> &vectP)
+bool DirectionalScan::isInImageBounds (vector<Pixel> &vectP)
 {
   bool result = true;
-  vector<QPoint>::iterator it = vectP.begin ();
+  vector<Pixel>::iterator it = vectP.begin ();
   while (it != vectP.end () && result)
   {
-    QPoint p = *it;
+    Pixel p = *it;
     result = result && isInImageBounds (p);
     ++ it;
   }
   return result;
+}
+
+
+
+vector<Pixel> DirectionalScan::start ()
+{
+  leftPos = 1;
+  rightPos = 1;
+  return vectLeftScan.at (0);
+}
+
+
+bool DirectionalScan::leftOn ()
+{
+  return (leftPos < (int) vectLeftScan.size ());
+}
+
+
+vector<Pixel> DirectionalScan::left ()
+{
+  return vectLeftScan.at (leftPos++);
+}
+
+
+bool DirectionalScan::rightOn ()
+{
+  return (rightPos < (int) vectRightScan.size ());
+}
+
+
+vector<Pixel> DirectionalScan::right ()
+{
+  return vectRightScan.at (rightPos++);
+}
+
+
+
+DirectionalScan::DirectionalScan (Pixel p1, Pixel p2, Pixel v)
+{
+  Pixel pc (p2.x () - p1.x (), p2.y () - p1.y ());
+  
+  if (v.x () * v.x () >= v.y () * v.y ())  // horizontal direction
+  {
+    if (p1.y () > p2.y ())
+    {
+      this->p1 = p2;
+      this->p2 = p1;
+    }
+    else
+    {
+      this->p1 = p1;
+      this->p2 = p2;
+    }
+    if (v.x () < 0.) v = Pixel (-v.x (), -v.y ());
+
+    computeMotif (Pixel (0, 0), v);
+    int n = pc.y () - p1.y ();
+    if (p1.x () < pc.x ())
+      for (int i = 0; i < pc.x () - p1.x (); i++)
+        n += tabDeplacements[i % vectPoints.size()].y ();
+    else
+      for (int i = 0; i < p1.x () - pc.x (); i++)
+        n -= tabDeplacements[(2 * vectPoints.size() - 1 - i)
+                             % vectPoints.size()].y ();
+    if (n < 5) n = 5;
+    
+    int x = pc.x (), y = pc.y ();
+    for (int i = n - 1; i >= 0; i--)
+    {
+      x += tabDeplacements[i % vectPoints.size()].y ();
+      y -= tabDeplacements[i % vectPoints.size()].x ();
+    }
+
+    bool ok = true;
+    while (ok)
+    {
+    }
+
+  }
+  else    // vertical direction
+  {
+  }
 }

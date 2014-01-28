@@ -2,13 +2,12 @@
 #define BLURREDSEGMENT_H
 
 
-
-
-
 #include "convexhull.h"
 #include "point2d.h"
 #include <iostream>
-#include <QPoint>
+#include "pixel.h"
+
+using namespace std;
 
 
 
@@ -20,7 +19,6 @@ protected:
   vector<Point2D> vectorPixel; 
   
   
-  
 public:
   BlurredSegment();
   BlurredSegment(Point2D p1, Point2D p2, Point2D p3, int maxThickness);
@@ -29,15 +27,14 @@ public:
   bool isSegmentPoint(Point2D point, Direction d );
   double getThickness();
   double getMaxThickness();
-  QPoint getCenter();
+  Pixel getCenter();
   
   ConvexHull *getConvexHull();
-  vector<QPoint> getListeQPoint();
-  vector<Point2D> getListePixel();
+  vector<Pixel> getListePixel();
+  vector<Point2D> getListePoint2D();
   double getDirection();
 
-  vector<QPoint>  getPrintedPoints();
-
+  vector<Pixel>  getPrintedPoints();
 
 
 protected:
@@ -50,9 +47,5 @@ protected:
   Point2D point3;
   int nbPoint;
   
-
-
 };
 #endif
-
-

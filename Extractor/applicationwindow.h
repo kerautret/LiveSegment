@@ -4,7 +4,7 @@
 #include <QList>
 #include <QMainWindow>
 #include "profiler.h"
-#include "paint.h"
+#include "extractionwidget.h"
 
 
 class ApplicationWindow : public QMainWindow
@@ -34,7 +34,7 @@ private:
   bool saveFile (const QByteArray &fileFormat);
   QMenu *saveAsMenu;
   QMenu *fileMenu;
-  Paint *paint;
+  ExtractionWidget *extractor;
 
   QAction *openAct;
   QList<QAction *> saveAsActs;

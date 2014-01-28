@@ -1,13 +1,13 @@
-#include "pointset.h"
+#include "linetool.h"
 #include <math.h>
 
 
-vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
+vector<Pixel> LineTool::draw (Pixel p1, Pixel p2)
 {
   int dx, dy, e;
   int x1, x2, y1, y2;
 
-  vector<QPoint> vectPoints;
+  vector<Pixel> vectPoints;
   x1 = p1.x ();
   x2 = p2.x ();
   y1 = p1.y ();
@@ -27,7 +27,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
       dy = dy * 2;
       while (x1 != x2)
       {
-        vectPoints.push_back (QPoint (x1, y1));
+        vectPoints.push_back (Pixel (x1, y1));
         x1 = x1 + 1;
         e = e - dy;
         if (e < 0)
@@ -36,7 +36,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
           e = e + dx;
         }
       }
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
     }
     // 2eme octant
     else if (dx < dy)
@@ -46,7 +46,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
       dy = dy * 2;
       while (y1 != y2)
       {
-        vectPoints.push_back (QPoint (x1, y1));
+        vectPoints.push_back (Pixel (x1, y1));
         y1 = y1 + 1;
         e = e - dx;
         if (e < 0)
@@ -55,7 +55,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
           e = e + dy;
         }
       }
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
     }
   }
 
@@ -70,7 +70,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
       dy = dy * 2;
       while (x1 != x2)
       {
-        vectPoints.push_back (QPoint (x1, y1));
+        vectPoints.push_back (Pixel (x1, y1));
         x1 = x1 + 1;
         e = e + dy;
         if (e < 0)
@@ -79,7 +79,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
           e = e + dx;
         }
       }
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
     }
     else
     {
@@ -89,7 +89,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
       dy = dy * 2;
       while (y1 != y2)
       {
-        vectPoints.push_back (QPoint (x1, y1));
+        vectPoints.push_back (Pixel (x1, y1));
         y1 = y1 - 1;
         e = e + dx;
         if (e > 0)
@@ -98,17 +98,17 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
           e = e + dy;
         }
       }
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
     }
   }
   else if (dy == 0 && dx > 0)
   {
     while (x1 != x2)
     {
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
       x1 = x1 + 1;
     }
-    vectPoints.push_back (QPoint (x1, y1));
+    vectPoints.push_back (Pixel (x1, y1));
   }
 
   // 2ieme quadrant
@@ -122,7 +122,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
       dy = dy * 2;
       while (x1 != x2)
       {
-	vectPoints.push_back (QPoint (x1, y1));
+	vectPoints.push_back (Pixel (x1, y1));
 	x1 = x1 - 1;
 	e = e + dy;
 	if (e >= 0)
@@ -131,7 +131,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
 	  e = e + dx;
 	}
       }
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
     }
     // 3ieme octant
     else if (-dx < dy)
@@ -141,7 +141,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
       dy = dy * 2;
       while (y1 != y2)
       {
-        vectPoints.push_back (QPoint (x1, y1));
+        vectPoints.push_back (Pixel (x1, y1));
         y1 = y1 + 1;
         e = e + dx;
         if (e <= 0)
@@ -150,7 +150,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
           e = e + dy;
         }
       }
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
     }
   }
 
@@ -165,7 +165,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
       dy = dy * 2;
       while (x1 != x2)
       {
-        vectPoints.push_back (QPoint (x1, y1));
+        vectPoints.push_back (Pixel (x1, y1));
         x1 = x1 - 1;
         e = e - dy;
         if (e >= 0)
@@ -174,7 +174,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
           e = e + dx;
         }
       }
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
     }
     else
     {
@@ -184,7 +184,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
       dy = dy * 2;
       while (y1 != y2)
       {
-        vectPoints.push_back (QPoint (x1, y1));
+        vectPoints.push_back (Pixel (x1, y1));
         y1 = y1 - 1;
         e = e - dx;
         if (e >= 0)
@@ -193,43 +193,43 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2)
           e = e + dy;
         }
       }
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
     }
   }
   else if (dy == 0 && dx < 0)
   {
     while (x1 != x2)
     {
-      vectPoints.push_back(QPoint(x1,y1));
+      vectPoints.push_back (Pixel (x1,y1));
       x1 = x1 - 1;
     }
-    vectPoints.push_back (QPoint (x1, y1));
+    vectPoints.push_back (Pixel (x1, y1));
   }
   else if (dx == 0 && dy > 0)
   {
     while (y1 != y2)
     {
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
       y1 = y1 + 1;
     }
-    vectPoints.push_back (QPoint (x1, y1));
+    vectPoints.push_back (Pixel (x1, y1));
   }
   else if (dx == 0 && dy < 0)
   {
     while (y1 != y2)
     {
-      vectPoints.push_back (QPoint (x1, y1));
+      vectPoints.push_back (Pixel (x1, y1));
       y1 = y1 - 1;
     }
-    vectPoints.push_back (QPoint (x1, y1));
+    vectPoints.push_back (Pixel (x1, y1));
   }
   return vectPoints;
 }
 
 
-vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
+vector<Pixel> LineTool::draw (Pixel p1, Pixel p2, int n)
 {
-  vector<QPoint> pts;
+  vector<Pixel> pts;
 
   int x1 = p1.x ();
   int x2 = p2.x ();
@@ -259,7 +259,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
       // y2 -= n - floors;   // inutile
       while (x1 < x2)
       {
-        pts.push_back (QPoint (x1, y1));
+        pts.push_back (Pixel (x1, y1));
         x1 ++;
         e = e - dy;
         if (e < 0)
@@ -268,7 +268,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
           e = e + dx;
         }
       }
-      pts.push_back (QPoint (x1, y1));
+      pts.push_back (Pixel (x1, y1));
     }
     else if (dx < dy) // Octant 2
     {
@@ -284,7 +284,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
       y2 -= steps;  // inutile
       while (y1 < y2)
       {
-        pts.push_back (QPoint (x1, y1));
+        pts.push_back (Pixel (x1, y1));
         y1 ++;
         e -= dx;
         if (e < 0)
@@ -293,7 +293,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
           e += dy;
         }
       }
-      pts.push_back (QPoint (x1, y1));
+      pts.push_back (Pixel (x1, y1));
     }
   }
 
@@ -313,7 +313,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
       // y2 -= n + floors;  // inutile
       while (x1 < x2)
       {
-        pts.push_back (QPoint (x1, y1));
+        pts.push_back (Pixel (x1, y1));
         x1 ++;
         e += dy;
         if (e < 0)
@@ -322,7 +322,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
           e += dx;
         }
       }
-      pts.push_back (QPoint (x1, y1));
+      pts.push_back (Pixel (x1, y1));
     }
     else // Octant 7
     {
@@ -338,7 +338,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
       y2 -= steps;
       while (y1 > y2)
       {
-        pts.push_back (QPoint (x1, y1));
+        pts.push_back (Pixel (x1, y1));
         y1 --;
         e += dx;
         if (e > 0)
@@ -347,11 +347,11 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
           e += dy;
         }
       }
-      pts.push_back (QPoint (x1, y1));
+      pts.push_back (Pixel (x1, y1));
     }
   }
   else if (dy == 0 && dx > 0)
-    while (x1 <= x2) pts.push_back (QPoint (x1++, y1 - n));
+    while (x1 <= x2) pts.push_back (Pixel (x1++, y1 - n));
 
   if (dx < 0 && dy > 0)    // Quadrant 2
   {
@@ -369,7 +369,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
       // y2 += n - floors;   // inutile
       while (x1 > x2)
       {
-        pts.push_back (QPoint (x1, y1));
+        pts.push_back (Pixel (x1, y1));
         x1 --;
         e += dy;
         if (e >= 0)
@@ -378,7 +378,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
           e += dx;
         }
       }
-      pts.push_back (QPoint (x1, y1));
+      pts.push_back (Pixel (x1, y1));
     }
     else if (-dx < dy) // Octant 3
     {
@@ -394,7 +394,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
       y2 += steps;
       while (y1 < y2)
       {
-        pts.push_back (QPoint (x1, y1));
+        pts.push_back (Pixel (x1, y1));
         y1 ++;
         e += dx;
         if (e <= 0)
@@ -403,7 +403,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
           e += dy;
         }
       }
-      pts.push_back (QPoint (x1, y1));
+      pts.push_back (Pixel (x1, y1));
     }
   }
 
@@ -423,7 +423,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
       // y2 += n - floors;  // inutile
       while (x1 > x2)
       {
-        pts.push_back (QPoint (x1, y1));
+        pts.push_back (Pixel (x1, y1));
         x1 --;
         e -= dy;
         if (e >= 0)
@@ -432,7 +432,7 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
           e += dx;
         }
       }
-      pts.push_back (QPoint (x1, y1));
+      pts.push_back (Pixel (x1, y1));
     }
     else // Octant 6
     {
@@ -444,11 +444,10 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
       e += floors * dy + steps * dx;
       x1 -= n + floors;
       y1 += steps;
-      // x2 -= n - floors;  // inutile
-      y2 += steps;
+      y2 += steps;    // x2 -= n - floors;  // calcul inutile
       while (y1 > y2)
       {
-        pts.push_back (QPoint (x1, y1));
+        pts.push_back (Pixel (x1, y1));
         y1 --;
         e -= dx;
         if (e >= 0)
@@ -457,22 +456,22 @@ vector<QPoint> PointSet::tracerSegment (QPoint p1, QPoint p2, int n)
           e += dy;
         }
       }
-      pts.push_back (QPoint (x1, y1));
+      pts.push_back (Pixel (x1, y1));
     }
   }
   else if (dy == 0 && dx < 0)
-    while (x1 >= x2) pts.push_back (QPoint (x1--, y1 + n));
+    while (x1 >= x2) pts.push_back (Pixel (x1--, y1 + n));
   else if (dx == 0 && dy > 0)
-    while (y1 <= y2) pts.push_back (QPoint (x1 + n, y1++));
+    while (y1 <= y2) pts.push_back (Pixel (x1 + n, y1++));
   else if (dx == 0 && dy < 0)
-    while(y1 >= y2) pts.push_back (QPoint (x1 - n, y1--));
+    while(y1 >= y2) pts.push_back (Pixel (x1 - n, y1--));
   return pts;
 }
 
 
-void PointSet::fusionVector (vector<QPoint> &v1, vector<QPoint> &v2)
+void LineTool::merge (vector<Pixel> &v1, vector<Pixel> &v2)
 {
-  vector<QPoint>::iterator it = v2.begin ();
+  vector<Pixel>::iterator it = v2.begin ();
   while (it != v2.end ())
   {
     v1.push_back (*it);
