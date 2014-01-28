@@ -6,6 +6,8 @@ TEMPLATE = app
 TARGET = 
 DEPENDPATH += . BlurredSegments Detector Extractor
 INCLUDEPATH += . Extractor Detector BlurredSegments
+macx:MOC_DIR            = .moc
+macx:OBJECTS_DIR        = .obj
 
 # Input
 HEADERS += BlurredSegments/algorithm.h \
