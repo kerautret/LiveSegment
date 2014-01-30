@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 		<< "Detect line according the liveSegment algorithm applied on all the image. "
 		<< general_opt << "\n" 
                 << "Typical use: \n"
-                << " ";
+                << " ./ssExtraction  -i ../../ImagesTest/chaise.pgm -n ../../ImagesTest/chaise.gif --width 3 --stepXY 20  --initLength 20 --acceptedLack 5 ; fig2dev -L eps imageResult.fig imageResult.eps \n";
       return 0;
     }
   
