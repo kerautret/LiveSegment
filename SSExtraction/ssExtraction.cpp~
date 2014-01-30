@@ -1,0 +1,3 @@
+#include <DGtal/base/Common.h
+>
+#include "DGtal/io/readers/GenericReader.h"
