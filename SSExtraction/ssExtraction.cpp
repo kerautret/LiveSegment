@@ -38,6 +38,7 @@ int main(int argc, char** argv)
     ("initLength, l",  po::value<unsigned int>(), "set the length of directional line (to start the recognition) (default 20) " )
     ("minSegSize, m",  po::value<unsigned int>(), "set the minimal of point of a segment in order to be considered  (default 10 ) " )
     ("acceptedLack,a",  po::value<unsigned int>(), "set the accepted lack in the segment recognition (i.e the number of consecutive outliers) (default 5) " ) 
+    ("singleDetection", po::value<std::vector<unsigned int> >()->multitoken(), "x y: apply a single detection instead all segment extraction."   ) 
     ("output-file,o", po::value<std::string>(), "set output basename (default output)" ) ;
 
   bool parseOK=true;
@@ -127,24 +128,40 @@ int main(int argc, char** argv)
   vector< vector<Pixel> >  vectAllSS;
 
 
-  for(unsigned py=0 ; py < height- STEP_XY; py+=STEP_XY){ 
-    for(unsigned px=0 ; px < width- STEP_XY; px+=STEP_XY){ 
-      trace.info() << "Step x=" << px << "Step y=" << py << std::endl;  
-      Pixel p1(px-WIDTH_XY, py-WIDTH_XY);
-      Pixel p2(px+WIDTH_XY, py+WIDTH_XY);
-      BlurredSegment *bs1 = segDect.detect (p1, p2);
-      if(bs1 != NULL && bs1->getListePixel().size()>MIN_SEG_SIZE){
-        vectAllSS.push_back( bs1->getPrintedPoints ());
-      }
-      Pixel p3(px-WIDTH_XY, py+WIDTH_XY);
-      Pixel p4(px+WIDTH_XY, py-WIDTH_XY); 
-      BlurredSegment *bs2 = segDect.detect (p3, p4);
-      if(bs2 != NULL&& bs2->getListePixel().size()>MIN_SEG_SIZE){
-        vectAllSS.push_back( bs2->getPrintedPoints ());
+  if(vm.count("singleDetection")){
+    std::vector<unsigned int> ptCoord = vm["singleDetection"].as<std::vector<unsigned int> > ();
+    unsigned int px = ptCoord[0];
+    unsigned int py = ptCoord[1];
+    Pixel p1(px-WIDTH_XY, py-WIDTH_XY);
+    Pixel p2(px+WIDTH_XY, py+WIDTH_XY);
+    BlurredSegment *bs1 = segDect.detect (p1, p2);
+    if(bs1 != NULL && bs1->getListePixel().size()>MIN_SEG_SIZE){
+      vectAllSS.push_back( bs1->getPrintedPoints ());
+    }
+         
+    trace.info() << "Single detection from point of coords x=" << px << " y=" << py << std::endl;  
+      
+
+  }else{
+    
+    for(unsigned py=0 ; py < height- STEP_XY; py+=STEP_XY){ 
+      for(unsigned px=0 ; px < width- STEP_XY; px+=STEP_XY){ 
+        trace.info() << "Step x=" << px << "Step y=" << py << std::endl;  
+        Pixel p1(px-WIDTH_XY, py-WIDTH_XY);
+        Pixel p2(px+WIDTH_XY, py+WIDTH_XY);
+        BlurredSegment *bs1 = segDect.detect (p1, p2);
+        if(bs1 != NULL && bs1->getListePixel().size()>MIN_SEG_SIZE){
+          vectAllSS.push_back( bs1->getPrintedPoints ());
+        }
+        Pixel p3(px-WIDTH_XY, py+WIDTH_XY);
+        Pixel p4(px+WIDTH_XY, py-WIDTH_XY); 
+        BlurredSegment *bs2 = segDect.detect (p3, p4);
+        if(bs2 != NULL&& bs2->getListePixel().size()>MIN_SEG_SIZE){
+          vectAllSS.push_back( bs2->getPrintedPoints ());
+        }
       }
     }
-  }
-        
+  }   
   Board2D aBoard;  
   double scale = 1.0;
   aBoard.setUnit (0.05*scale, LibBoard::Board::UCentimeter);
