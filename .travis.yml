@@ -8,7 +8,6 @@ install:
   - sudo apt-get install libqwt-dev
 
 script:
-  - qmake -project
-  - qmake LiveSegment.pro
+  - qmake 
   - make
 
