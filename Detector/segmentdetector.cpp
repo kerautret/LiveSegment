@@ -38,9 +38,8 @@ BlurredSegment *SegmentDetector::detect (Pixel p1, Pixel p2)
 
   // Premiere detection max des gradients sans direction
   //----------------------------------------------------
-  DirectionalScan dirScan = DirectionalScan (p1, p2);
-  dirScan.computeAllScans (0, 0, imageData->getWidth (),
-                                 imageData->getHeight ());
+  DirectionalScan dirScan = DirectionalScan (p1, p2, 0,
+              imageData->getWidth (), 0, imageData->getHeight ());
   vector<Pixel> pointLeftCandidates
             = imageData->maxGradient (dirScan, LEFT, gradientThreshold);
   vector<Pixel> pointRightCandidates
@@ -48,15 +47,19 @@ BlurredSegment *SegmentDetector::detect (Pixel p1, Pixel p2)
   if ((int) pointLeftCandidates.size () == 0
       || (int) pointRightCandidates.size () == 0)
   {
+/*
     cerr << "aucune droite detectable (pas de candidats a gauche ou a droite)"
          << endl;
+*/
     return NULL;
   }
 
   if (! buildSegment (pointLeftCandidates, pointRightCandidates))
   {
+/*
     cerr << "aucune droite detectable (pas assez de candidats initiaux)"
          << endl;
+*/
     return NULL;
   }
   if (numberOfSteps == 1) return segment;
@@ -65,30 +68,26 @@ BlurredSegment *SegmentDetector::detect (Pixel p1, Pixel p2)
   // Deuxieme detection apres ajustement de la direction initiale
   // puis detection en fonction des gradients max dans la direction
   //---------------------------------------------------------------
-  Pixel pCenter = segment->getCenter ();
-  Pixel p11 = Pixel (pCenter);
-  Pixel p12 = Pixel (pCenter);
-  double direction = segment->getDirection ();
-  double ca = -sin (direction);
-  double sa = cos (direction);
-  p11.translate (2 * maxWidth, ca, sa);
-  p12.translate (2 * maxWidth, -ca, -sa);
-  DirectionalScan dirScan2 = DirectionalScan (p11, p12, direction);
-  dirScan2.computeAllScans(0, 0, imageData->getWidth (),
-                                 imageData->getHeight ());
+  int *coords = new int[4];
+  segment->getDirection (coords);
+  Pixel v1 (coords[0], coords[1]);
+  Pixel v2 (coords[2], coords[3]);
+  DirectionalScan dirScan2 = DirectionalScan (p1, p2, v1, v2, 0,
+          imageData->getWidth (), 0, imageData->getHeight ());
+  delete coords;
 
   vector<vector<Pixel> > pointRightCandidatesV
     = imageData->gradientRidges (dirScan2, RIGHT,
-                      Pixel (p11.x () - p12.x (), p11.y () - p12.y ()),
+                      Pixel (v2.x () - v1.x (), v2.y () - v1.y ()),
                       directionCloseness);
   vector<vector<Pixel> > pointLeftCandidatesV
     = imageData->gradientRidges (dirScan2, LEFT,
-                      Pixel (p11.x () - p12.x (), p11.y () - p12.y ()),
+                      Pixel (v2.x () - v1.x (), v2.y () - v1.y ()),
                       directionCloseness);
   if ((int) pointLeftCandidatesV.size () == 0
       || (int) pointRightCandidatesV.size () == 0)
   {
-    cerr << "aucune droite detectable." << endl;
+//    cerr << "aucune droite detectable." << endl;
     return NULL;
   }
 
@@ -102,29 +101,26 @@ BlurredSegment *SegmentDetector::detect (Pixel p1, Pixel p2)
   // Troisieme detection apres ajustement de la direction initiale
   // puis detection en fonction des gradients max dans la direction 
   //---------------------------------------------------------------
-  p11 = Pixel (pCenter);
-  p12 = Pixel (pCenter);
-  direction = segment->getDirection ();
-  ca = -sin (direction);
-  sa = cos (direction);
-  p11.translate (2 * maxWidth, ca, sa);
-  p12.translate (2 * maxWidth, -ca, -sa);
-  dirScan2 = DirectionalScan (p11, p12, direction);
-  dirScan2.computeAllScans (0, 0, imageData->getWidth (),
-                                  imageData->getHeight ());
+  coords = new int[4];
+  segment->getDirection (coords);
+  Pixel v3 (coords[0], coords[1]);
+  Pixel v4 (coords[2], coords[3]);
+  dirScan2 = DirectionalScan (p1, p2, v3, v4, 0,
+               imageData->getWidth (), 0, imageData->getHeight ());
+  delete coords;
 
   pointRightCandidatesV
     = imageData->gradientRidges (dirScan2, RIGHT,
-                    Pixel (p11.x () - p12.x (), p11.y () - p12.y ()),
+                    Pixel (v2.x () - v1.x (), v2.y () - v1.y ()),
                     directionCloseness);
   pointLeftCandidatesV
     = imageData->gradientRidges (dirScan2, LEFT,
-                    Pixel (p11.x () - p12.x (), p11.y () - p12.y ()),
+                    Pixel (v2.x () - v1.x (), v2.y () - v1.y ()),
                     directionCloseness);
   if ((int) pointLeftCandidates.size () == 0
       || (int) pointRightCandidates.size () == 0)
   {
-    cerr << "aucune droite detectable." << endl;
+//    cerr << "aucune droite detectable." << endl;
     return NULL;
   }
 

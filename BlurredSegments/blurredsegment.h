@@ -33,6 +33,7 @@ public:
   vector<Pixel> getListePixel();
   vector<Point2D> getListePoint2D();
   double getDirection();
+  void getDirection(int *coords);
 
   vector<Pixel>  getPrintedPoints();
 

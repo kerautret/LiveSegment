@@ -1,462 +1,728 @@
 #include <cstdlib>
 #include <iostream>
 #include "directionalscan.h"
-#include "linetool.h"
-#include "util.h"    // Direction et cmath
+#include "util.h"  // Direction
 
 
-DirectionalScan::DirectionalScan (Pixel p1, Pixel p2)
+
+DirectionalScan::DirectionalScan (Pixel p1, Pixel p2,
+                                  int xmin, int xmax, int ymin, int ymax)
 {
-  this->p1 = p1;
-  this->p2 = p2;
-  this->calcDroites ();
-  this->directionOctant = this->retOctantDroiteD1 ();
-  this->computeMotif (p1, p2);
+  this->xmin = xmin;
+  this->xmax = xmax;
+  this->ymin = ymin;
+  this->ymax = ymax;
+
+  // Enforces P1 to be lower than p2
+  if (p1.y () > p2.y ())
+  {
+    Pixel tmp = p1;
+    p1 = p2;
+    p2 = tmp;
+  }
+    
+  // Computes the steps position array
+  int nbs = 0;
+  bool *steps = p1.stepsTo (p2, &nbs);
+
+  // Start position of the central scan
+  int cx = p1.x ();
+  int cy = p1.y ();
+
+  // Equation of the strip support lines : ax - by = mu
+  int a = p1.x () - p2.x ();
+  int b = p2.y () - p1.y ();
+  int mu2 = a * p2.x () - b * p2.y ();
+  // int mw = nbs - 1;   // unused
+
+  // Builds the scans
+  scan (a, b, mu2, nbs, steps, cx, cy);
+  delete steps;
 }
 
 
-DirectionalScan::DirectionalScan (Pixel p1, Pixel p2, double directionAngle)
+
+DirectionalScan::DirectionalScan (Pixel p1, Pixel p2, Pixel v1, Pixel v2,
+                                  int xmin, int xmax, int ymin, int ymax)
 {
-  this->p1 = p1;
-  this->p2 = p2;
-  // this->calcDroites ();
-  // this->directionOctant = this->retOctantDroiteD1 ();
-  // cerr << "octant first = " << directionOctant << endl;
-  // cerr << "val ini a,b:" << a1<< " " << b1 << endl;
-  this->calcDroites (directionAngle);
-  this->directionOctant = this->retOctantDroiteD1 ();
-  // cerr << "octant second = " << directionOctant << endl;
-  // cerr << "direction angle " << directionAngle << endl;
-  // cerr << "val second a,b:" << a1<< " " << b1 << "cos (angle)="
-  //      << cos(directionAngle)<< endl;
-  this->computeMotif (p1, p2);
+  this->xmin = xmin;
+  this->xmax = xmax;
+  this->ymin = ymin;
+  this->ymax = ymax;
+
+  // Get the scan strip center
+  int cx = (p1.x () + p2.x ()) / 2;
+  int cy = (p1.y () + p2.y ()) / 2;
+    
+  // Gets the steps position array
+  int nbs = 0;
+  bool *steps = v1.stepsTo (v2, &nbs);
+
+  // Equation of the straigth line passing through the center : ax - by = mu
+  int a = v2.y () - v1.y ();
+  int b = v2.x () - v1.x ();
+  if (b < 0)
+  {
+    a = -a;
+    b = -b;
+  }
+  int mu1 = a * cx - b * cy;
+
+  // Enforces P1 at the right side of the straight line (C,V)
+  if (a * p1.x () - b * p1.y () < mu1)
+  {
+    Pixel tmp = p1;
+    p1 = p2;
+    p2 = tmp;
+  }
+
+  // Equation of the support lines of the scan strip
+  mu1 = a * p1.x () - b * p1.y ();
+  int mu2 = a * p2.x () - b * p2.y ();
+
+  // Looking for the central scan start position
+  int mw = 0;
+  bool *st = steps + nbs;
+  if (b * b < a * a)  // rather vertical strip
+  {
+    if (a > 0)     // octant 2
+    {
+      do
+      {
+        if (--st < steps) st = steps + nbs - 1;
+        if (*st) cy --;
+        cx ++;
+        mw++;
+      }
+      while (a * cx - b * cy < mu1);
+    }
+    else           // octant 7
+    {
+      do
+      {
+        if (--st < steps) st = steps + nbs - 1;
+        if (*st) cy --;
+        cx --;
+        mw++;
+      }
+      while (a * cx - b * cy < mu1);
+    }
+  }
+  else         // rather horizontal strip
+  {
+    if (a > 0)     // octant 1
+    {
+      do
+      {
+        if (--st < steps) st = steps + nbs - 1;
+        if (*st) cx ++;
+        cy --;
+        mw++;
+      }
+      while (a * cx - b * cy < mu1);
+    }
+    else           // octant 8
+    {
+      do
+      {
+        if (--st < steps) st = steps + nbs - 1;
+        if (*st) cx --;
+        cy --;
+        mw++;
+      }
+      while (a * cx - b * cy < mu1);
+    }
+  }
+  // mw = 2 * mw - 1;  // cause of variable scan lengths, unused
+
+  // Builds the scans
+  scan (a, b, mu2, nbs, steps, cx, cy);
+  delete steps;
 }
 
-
-
-vector<Pixel> DirectionalScan::getVectPoints ()
-{
-  return vectPoints;
-}
 
 
 vector<Pixel> DirectionalScan::getScan (int num, int direction)
 {
-  if (! isScanDefined (num, direction))
-  {
-    cerr << "Trying to get an undefined scan at " << num
-         << " in direction  " << direction << endl;
-    exit (1);
-  }
-  return (direction == RIGHT) ? vectRightScan.at (num) : vectLeftScan.at (num);
+  return (direction == RIGHT) ? rscan.at (num) : lscan.at (num);
 }
 
-
-vector<Pixel> DirectionalScan::getScanOrientedIndex (int num, int direction)
-{
-  vector<Pixel> vResult;
-  if (! isScanDefined (num, direction))
-  {
-    cerr << "Trying to get an undefined scan at " << num
-         << " in direction  " << direction << endl;
-    exit (1);
-  }
-  if (num >= 0)
-    vResult = getScan (num, direction);
-  else
-    vResult = getScan (abs (num), (direction == RIGHT) ? LEFT : RIGHT);
-  return vResult;
-}
-
-
-bool DirectionalScan::isScanDefined (int num, int direction)
-{
-  if (num > 0)
-    return (direction == RIGHT) ? (abs (num) < vectRightScan.size ())
-                                : (abs (num) < vectLeftScan.size ());
-  else
-    return (direction == RIGHT) ? (abs (num) < vectLeftScan.size ())
-                                : (abs (num) < vectRightScan.size ());
-}
 
 
 vector<Pixel> DirectionalScan::getLeftScan (int num)
 {
-  return vectLeftScan.at (num);
+  return lscan.at (num);
 }
 
 
 vector<Pixel> DirectionalScan::getRightScan (int num)
 {
-  return vectRightScan.at (num);
+  return rscan.at (num);
 }
 
 
 int DirectionalScan::getNbScan (int direction)
 {
-  return (direction == RIGHT) ? vectRightScan.size () : vectLeftScan.size ();
+  return (direction == RIGHT) ? rscan.size () : lscan.size ();
 }
 
 
 int DirectionalScan::getNbLeftScan ()
 {
-  return vectLeftScan.size ();
+  return lscan.size ();
 }
 
 
 int DirectionalScan::getNbRightScan ()
 {
-  return vectRightScan.size ();
+  return rscan.size ();
 }
 
 
-Pixel *DirectionalScan::retTabDeplacements (int direction)
+
+void DirectionalScan::scan (int a, int b, int mu2,
+                            int nbs, bool *steps, int cx, int cy)
 {
-  int tailleDeplacements = this->retTailleMotif ();
-  Pixel* vresult = new Pixel[tailleDeplacements];
-  for (int i = 0; i < tailleDeplacements; i++)
+  int x, y;                 // Current position coordinates
+  int sx, sy;               // Current scan start position
+  bool *lst; // idir        // Current step in strip direction
+  int ndir;                 // Nombre de scans
+  bool *mst; // ipts        // Start step in scan direction
+  bool *nst; // jpts        // Current step in scan direction
+  int npts;                 // Longueur d'un scan
+  bool *fs = steps + nbs;   // End of the steps position array
+  bool transition;
+
+
+  if (b * b < a * a)  // vertical strip
   {
-    Pixel dep = tabDeplacements[i];
-    vresult[i]= Pixel ((direction == RIGHT) ?  dep.y () : -dep.y (),
-		        (direction == RIGHT) ? -dep.x () :  dep.x ());
-  }
-  return vresult;
-}
-
-
-int DirectionalScan::retTailleMotif ()
-{
-  return vectPoints.size () - 1;
-}
-
-
-int DirectionalScan::retOctantDroiteD1 ()
-{
-  if (a1 >= 0 && b1 >= 0 && b1 >= a1)
-    return 1;
-  if (a1 >= 0 && b1 >= 0 && b1 < a1)
-    return 2;
-  if (b1 <= 0 && a1 >= 0 && -b1 <= a1)
-    return 3;
-  if (b1 <= 0 && a1 > 0 && -b1 > a1)
-    return 4;
-  if (a1 <= 0 && b1 <= 0 && -b1 >= -a1)
-    return 5;
-  if (a1 <= 0 && b1 <= 0 && -b1 < -a1)
-    return 6;
-  if (b1 >= 0 && a1 < 0 && b1 <= -a1)
-    return 7;
-  if (b1 >= 0 && a1 <= 0 && b1 >= -a1)
-    return 8;
-  else 
-    return 0;
-}
-
-
-bool DirectionalScan::isRight (Pixel p)
-{
-  int ux = p2.x () - p1.x ();
-  int uy = p2.y () - p1.y ();
-  int vx = p.x () - p1.x ();
-  int vy = p.y () - p1.y ();
-  return (ux * vy - uy * vx > 0);
-}
-
-
-bool DirectionalScan::isBetweenLines (Pixel p)
-{
-  return (a1 * p.x() - b1 * p.y() <= mu1 && a2 *p.x() - b2 * p.y() >= mu2);
-}
-
-
-int *DirectionalScan::retCoeffDroitesD1 ()
-{
-  int *d1 = new int[3];
-  d1[0] = a1;
-  d1[1] = b1;
-  d1[2] = mu1;
-  return d1;
-}
-
-
-int *DirectionalScan::retCoeffDroitesD2 ()
-{
-  int *d2 = new int[3];
-  d2[0] = a2;
-  d2[1] = b2;
-  d2[2] = mu2;
-  return d2;
-}
-
-
-void DirectionalScan::calcDroites ()
-{
-  int a0 = p2.y () - p1.y ();
-  int b0 = p2.x () - p1.x ();
-  this->a1 = -b0;
-  this->a2 = -b0;
-  this->b1 = a0;
-  this->b2 = a0;
-  this->mu1 = a1 * p1.x () - b1 * p1.y ();
-  this->mu2 = a2 * p2.x () - b2 * p2.y ();
-}
-
-
-void DirectionalScan::calcDroites (double directionAngle)
-{
-  // Orientates the angle so that angle lies in [-angle(P1P2), angle(P1P2)]
-  double ux = p2.x () - p1.x ();
-  double uy = p2.y () - p1.y ();
-  double vx = cos (directionAngle);
-  double vy = sin (directionAngle);
-  double prodScal = ux * vy - uy * vx;
-  if (prodScal > 0.0) directionAngle += M_PI;
-
-  this->a1 =  sin(directionAngle) * 10000;
-  this->a2 =  sin(directionAngle) * 10000;
-  this->b1 =  cos(directionAngle) * 10000;
-  this->b2 =  cos(directionAngle) * 10000;
-  this->mu1 = a1 * p1.x () - b1 * p1.y ();
-  this->mu2 = a2 * p2.x () - b2 * p2.y ();
-}
-
-
-void DirectionalScan::computeMotif (Pixel p1, Pixel p2)
-{
-  vectPoints = LineTool::draw (p1, p2);
-  vector<Pixel>::iterator iter = vectPoints.begin ();
-  tabDeplacements = new Pixel[vectPoints.size() - 1];
-  int i = 0;
-  Pixel pointLast = *iter;
-  iter ++;
-  while (iter != vectPoints.end ())
-  {
-    Pixel p = *iter;
-    tabDeplacements[i] = Pixel (p.x () - pointLast.x (),
-                                 p.y () - pointLast.y ());
-    i ++;
-    iter ++;
-    pointLast = p;
-  }
-}
-
-
-Pixel *DirectionalScan::inverseSensMotif (Pixel *tabDepl, int taille)
-{
-  Pixel *result = new Pixel [taille];
-  for (int i = 0; i < taille; i++)
-  {
-    result[i] = Pixel (- tabDepl[taille-i-1].x(), - tabDepl[taille-i-1].y());
-  }
-  return result;
-}
-
-
-void DirectionalScan::addPixel (int x, int y)
-{
-  vectPoints.push_back (Pixel (x, y));
-}
-
-
-void DirectionalScan::computeAllScans (int xmin, int ymin, int xmax, int ymax)
-{
-  this->xmin = xmin;
-  this->ymin = ymin;
-  this->xmax = xmax;
-  this->ymax = ymax;
-  computeScans (xmin, ymin, xmax, ymax, RIGHT);
-  computeScans (xmin, ymin, xmax, ymax, LEFT);
-}
-
-
-vector<Pixel> DirectionalScan::inverseVector (vector<Pixel> &v)
-{
-  vector<Pixel> vResult;
-  vector<Pixel>::iterator iter = v.end ();
-  while (iter != v.begin ())
-  {
-    iter --;
-    Pixel p = *iter;
-    vResult.push_back (p);
-  }
-  return vResult;
-}
-
-
-void DirectionalScan::computeScans (int xmin, int ymin, int xmax, int ymax,
-                                    int direction)
-{
-  computeMotif (p1, p2);
-  int tailleDeplacements = this->retTailleMotif ();
-  Pixel pointCourant (p1.x (), p1.y ());
-
-  bool aInverser = false;
-  if ((directionOctant % 2 == 0 && direction == RIGHT)
-      || (directionOctant % 2 == 1 && direction == LEFT))
-  {
-    tabDeplacements = inverseSensMotif (tabDeplacements, tailleDeplacements);
-    pointCourant = Pixel (p2.x (), p2.y ());
-    aInverser = true;
-  }
-
-  Pixel pInit = pointCourant;
-  int posInit = 0;
-  int posTabCourante = 0;
-  
-  while (pointCourant.x () < xmax && pointCourant.x () > xmin
-         && pointCourant.y () > ymin && pointCourant.y () < ymax)
-  {
-    vector<Pixel> vectToadd;
-    posTabCourante = posInit;
-    pointCourant = pInit;
-    if (directionOctant == 1 || directionOctant == 8)
-      pointCourant = Pixel (pointCourant.x () + (direction == RIGHT ? 1 : -1),
-                             pointCourant.y ());
-    else if (directionOctant == 2 || directionOctant == 3)
-      pointCourant = Pixel (pointCourant.x (),
-                             pointCourant.y () + (direction == RIGHT ? 1 : -1));
-    else if (directionOctant == 4 || directionOctant == 5)
-      pointCourant = Pixel (pointCourant.x () + (direction == RIGHT ? -1 : 1),
-                             pointCourant.y ());
-    else if (directionOctant == 6 || directionOctant == 7)
-      pointCourant = Pixel (pointCourant.x (),
-                             pointCourant.y () + (direction == RIGHT ? -1 : 1));
-        
-    Pixel ptdeplacement = tabDeplacements[posTabCourante];
-    bool premierPointAjoute = false;
- 
-    while (isBetweenLines (pointCourant) || (! premierPointAjoute))
+    if (a > 0)     // octant 2
     {
-      if (isBetweenLines (pointCourant))
+      // Fills in the central scan
+      sx = cx;
+      sy = cy;
+      x = sx;
+      y = sy;
+      nst = steps;
+      vector<Pixel> sc;
+      for (int i = 1; a * x - b * y >= mu2; i++)
       {
-        if (pointCourant.x () < xmax && pointCourant.x () > xmin
-            && pointCourant.y () > ymin && pointCourant.y () < ymax)
-          vectToadd.push_back (pointCourant);
-        if (! premierPointAjoute)
-        {
-          premierPointAjoute = true;
-          posInit = posTabCourante;
-          pInit = pointCourant;
-        }
+        if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          sc.push_back (Pixel (x, y));
+        if (*nst) y++;
+        x--;
+        if (++nst >= fs) nst = steps;
       }
-      pointCourant = Pixel (pointCourant.x () + ptdeplacement.x (),
-                             pointCourant.y () + ptdeplacement.y ());
-      posTabCourante= (posTabCourante + 1) % tailleDeplacements;
-      ptdeplacement = tabDeplacements[posTabCourante];
-    }
-    if (aInverser)
-      vectToadd = inverseVector (vectToadd);
+      lscan.push_back (sc);
 
-    bool isAllInImage = isInImageBounds (vectToadd);
-    if (isAllInImage)
+      // Fills in the left scans
+      sx = cx;
+      sy = cy;
+      lst = steps;
+      ndir = 0; // numero de bande
+      transition = false;
+        
+      npts = 1;
+      mst = steps;
+      while (npts != 0)
+      {
+        // Preparation of the next scan
+        if (transition)
+        {
+          sy --;
+          transition = false;
+        }
+        else
+        {
+          if (--lst < steps) lst = fs - 1;
+          sy --;
+          if (*lst)
+          {
+            sx --;
+            if (*mst)
+            {
+              sy ++;
+              transition = true;
+            }
+            if (++mst >= fs) mst = steps;
+          }
+        }
+
+        // Computes the next scan
+        x = sx;
+        y = sy;
+        nst = mst;
+        npts = 0;
+        vector<Pixel> pix;
+        for (int i = 1; a * x - b * y >= mu2; i++)
+        {
+          if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          {
+            pix.push_back (Pixel (x, y));
+            npts ++;
+          }
+          if (*nst) y++;
+          x--;
+          if (++nst >= fs) nst = steps;
+        }
+        if (npts > SMIN) lscan.push_back (pix);
+        ndir++;
+      }
+
+      // Fills in the right scans
+      sx = cx;
+      sy = cy;
+      lst = steps;
+      ndir = 0; // numero de bande
+      transition = false;
+
+      npts = 1;
+      mst = steps;
+      while (npts != 0)
+      {
+        // Preparation of the next scan
+        if (transition)
+        {
+          sx ++;
+          if (--mst < steps) mst = fs - 1;
+          transition = false;
+        }
+        else
+        {
+          sy ++;
+          if (*lst)
+          {
+            if (--mst < steps) mst = fs - 1;
+            if (*mst)
+            {
+              if (++mst >= fs) mst = steps;
+              transition = true;
+            }
+            else sx ++;
+          }
+          if (++lst >= fs) lst = steps;
+        }
+
+        // Computes the next scan
+        x = sx;
+        y = sy;
+        nst = mst;
+        npts = 0;
+        vector<Pixel> pix;
+        for (int i = 1; a * x - b * y >= mu2; i++)
+        {
+          if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          {
+            pix.push_back (Pixel (x, y));
+            npts ++;
+          }
+          if (*nst) y++;
+          x--;
+          if (++nst >= fs) nst = steps;
+        }
+        if (npts > SMIN) rscan.push_back (pix);
+        ndir++;
+      }
+    }
+
+    else           // octant 7
     {
-      if (direction == RIGHT)
-        this->vectRightScan.push_back (vectToadd);
-      else
-        this->vectLeftScan.push_back (vectToadd);
+      // Fills in the central scan
+      sx = cx;
+      sy = cy;
+      x = sx;
+      y = sy;
+      nst = steps;
+      npts = 0;
+      vector<Pixel> sc;
+      for (int i = 1; a * x - b * y >= mu2; i++)
+      {
+        if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+        {
+          sc.push_back (Pixel (x, y));
+          npts ++;
+        }
+        if (*nst) y++;
+        x++;
+        if (++nst >= fs) nst = steps;
+      }
+      lscan.push_back (sc);
+
+      // Fills in the left scans
+      sx = cx;
+      sy = cy;
+      lst = steps;
+      ndir = 0; // numero de bande
+      transition = false;
+
+      npts = 1;
+      mst = steps;
+      while (npts != 0)
+      {
+        // Prepares the next scan
+        if (transition)
+        {
+          sx --;
+          if (--mst < steps) mst = fs - 1;
+          transition = false;
+        }
+        else
+        {
+          if (--lst < steps) lst = fs - 1;
+          sy ++;
+          if (*lst)
+          {
+            if (--mst < steps) mst = fs - 1;
+            if (*mst)
+            {
+              if (++mst >= fs) mst = steps;
+              transition = true;
+            }
+            else sx --;
+          }
+        }
+
+        // Computes the next scan
+        x = sx;
+        y = sy;
+        nst = mst;
+        npts = 0;
+        vector<Pixel> pix;
+        for (int i = 1; a * x - b * y >= mu2; i++)
+        {
+          if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          {
+            pix.push_back (Pixel (x, y));
+            npts ++;
+          }
+          if (*nst) y++;
+          x++;
+          if (++nst >= fs) nst = steps;
+        }
+        if (npts > SMIN) lscan.push_back (pix);
+        ndir++;
+      }
+
+      // Fills in the right scans
+      sx = cx;
+      sy = cy;
+      lst = steps;
+      ndir = 0; // numero de bande
+      transition = false;
+
+      npts = 1;
+      mst = steps;
+      while (npts != 0)
+      {
+        // Prepares the next scan
+        if (transition)
+        {
+          sy --;
+          transition = false;
+        }
+        else
+        {
+          sy --;
+          if (*lst)
+          {
+            sx ++;
+            if (*mst)
+            {
+              sy ++;
+              transition = true;
+            }
+            if (++mst >= fs) mst = steps;
+          }
+          if (++lst >= fs) lst = steps;
+        }
+
+        // Computes the next scan
+        x = sx;
+        y = sy;
+        nst = mst;
+        npts = 0;
+        vector<Pixel> pix;
+        for (int i = 1; a * x - b * y >= mu2; i++)
+        {
+          if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          {
+            pix.push_back (Pixel (x, y));
+            npts ++;
+          }
+          if (*nst) y++;
+          x++;
+          if (++nst == fs) nst = steps;
+        }
+        if (npts > SMIN) rscan.push_back (pix);
+        ndir++;
+      }
     }
   }
-}
 
-
-bool DirectionalScan::isInImageBounds (Pixel &p)
-{
-  return ((p.x () < xmax) && (p.y () < ymax)
-           && (p.y() >= ymin) && (p.x () >= xmin));
-}
-
-
-bool DirectionalScan::isInImageBounds (vector<Pixel> &vectP)
-{
-  bool result = true;
-  vector<Pixel>::iterator it = vectP.begin ();
-  while (it != vectP.end () && result)
+  else  // horizontal strip
   {
-    Pixel p = *it;
-    result = result && isInImageBounds (p);
-    ++ it;
-  }
-  return result;
-}
-
-
-
-vector<Pixel> DirectionalScan::start ()
-{
-  leftPos = 1;
-  rightPos = 1;
-  return vectLeftScan.at (0);
-}
-
-
-bool DirectionalScan::leftOn ()
-{
-  return (leftPos < (int) vectLeftScan.size ());
-}
-
-
-vector<Pixel> DirectionalScan::left ()
-{
-  return vectLeftScan.at (leftPos++);
-}
-
-
-bool DirectionalScan::rightOn ()
-{
-  return (rightPos < (int) vectRightScan.size ());
-}
-
-
-vector<Pixel> DirectionalScan::right ()
-{
-  return vectRightScan.at (rightPos++);
-}
-
-
-
-DirectionalScan::DirectionalScan (Pixel p1, Pixel p2, Pixel v)
-{
-  Pixel pc (p2.x () - p1.x (), p2.y () - p1.y ());
-  
-  if (v.x () * v.x () >= v.y () * v.y ())  // horizontal direction
-  {
-    if (p1.y () > p2.y ())
+    if (a > 0)     // octant 1
     {
-      this->p1 = p2;
-      this->p2 = p1;
-    }
-    else
-    {
-      this->p1 = p1;
-      this->p2 = p2;
-    }
-    if (v.x () < 0.) v = Pixel (-v.x (), -v.y ());
+      // Fills in the central scan
+      sx = cx;
+      sy = cy;
+      x = sx;
+      y = sy;
+      nst = steps;
+      npts = 0;
+      vector<Pixel> sc;
+      for (int i = 1; a * x - b * y >= mu2; i++)
+      {
+        if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+        {
+          sc.push_back (Pixel (x, y));
+          npts ++;
+        }
+        if (*nst) x--;
+        y++;
+        if (++nst >= fs) nst = steps;
+      }
+      lscan.push_back (sc);
 
-    computeMotif (Pixel (0, 0), v);
-    int n = pc.y () - p1.y ();
-    if (p1.x () < pc.x ())
-      for (int i = 0; i < pc.x () - p1.x (); i++)
-        n += tabDeplacements[i % vectPoints.size()].y ();
-    else
-      for (int i = 0; i < p1.x () - pc.x (); i++)
-        n -= tabDeplacements[(2 * vectPoints.size() - 1 - i)
-                             % vectPoints.size()].y ();
-    if (n < 5) n = 5;
-    
-    int x = pc.x (), y = pc.y ();
-    for (int i = n - 1; i >= 0; i--)
-    {
-      x += tabDeplacements[i % vectPoints.size()].y ();
-      y -= tabDeplacements[i % vectPoints.size()].x ();
+      // Fills in the left scans
+      sx = cx;
+      sy = cy;
+      lst = steps;
+      ndir = 0; // numero de bande
+      transition = false;
+        
+      npts = 1;
+      mst = steps;
+      while (npts != 0)
+      {
+        // Prepares the next scan
+        if (transition)
+        {
+          sy --;
+          if (--mst < 0) mst = fs - 1;
+          transition = false;
+        }
+        else
+        {
+          if (--lst < steps) lst = fs - 1;
+          sx --;
+          if (*lst)
+          {
+            sy --;
+            if (--mst < steps) mst = fs - 1;
+            if (*mst)
+            {
+              if (++mst >= fs) mst = steps;
+              sy ++;
+              transition = true;
+            }
+          }
+        }
+
+        // Computes the next scan
+        x = sx;
+        y = sy;
+        nst = mst;
+        npts = 0;
+        vector<Pixel> pix;
+        for (int i = 1; a * x - b * y >= mu2; i++)
+        {
+          if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          {
+            pix.push_back (Pixel (x, y));
+            npts ++;
+          }
+          if (*nst) x--;
+          y++;
+          if (++nst >= fs) nst = steps;
+        }
+        if (npts > SMIN) lscan.push_back (pix);
+        ndir++;
+      }
+
+      // Fills in the right scan
+      sx = cx;
+      sy = cy;
+      lst = steps;
+      ndir = 0; // numero de bande
+      transition = false;
+
+      npts = 1;
+      mst = steps;
+      while (npts != 0)
+      {
+        // Prepares the next scan
+        if (transition)
+        {
+          sx ++;
+          transition = false;
+        }
+        else
+        {
+          sx ++;
+          if (*lst)
+          {
+            if (*mst)
+            {
+              sx --;
+              transition = true;
+            }
+            sy ++;
+            if (++mst >= fs) mst = steps;
+          }
+          if (++lst >= fs) lst = steps;
+        }
+
+        // Computes the next scan
+        x = sx;
+        y = sy;
+        nst = mst;
+        npts = 0;
+        vector<Pixel> pix;
+        for (int i = 1; a * x - b * y >= mu2; i++)
+        {
+          if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          {
+            pix.push_back (Pixel (x, y));
+            npts ++;
+          }
+          if (*nst) x--;
+          y++;
+          if (++nst >= fs) nst = steps;
+        }
+        if (npts > SMIN) rscan.push_back (pix);
+        ndir++;
+      }
     }
 
-    bool ok = true;
-    while (ok)
+    else        // octant 8
     {
-    }
+      // Fills in the central scan
+      sx = cx;
+      sy = cy;
+      x = sx;
+      y = sy;
+      nst = steps;
+      npts = 0;
+      vector<Pixel> sc;
+      for (int i = 1; a * x - b * y >= mu2; i++)
+      {
+        if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          sc.push_back (Pixel (x, y));
+        if (*nst) x++;
+        y++;
+        if (++nst >= fs) nst = steps;
+      }
+      lscan.push_back (sc);
 
-  }
-  else    // vertical direction
-  {
+      // Fills in the left scans
+      sx = cx;
+      sy = cy;
+      lst = steps;
+      ndir = 0; // numero de bande
+      transition = false;
+      
+      npts = 1;
+      mst = steps;
+      while (npts != 0)
+      {
+        // Prepares the next scan
+        if (transition)
+        {
+          sx --;
+          transition = false;
+        }
+        else
+        {
+          if (--lst < steps) lst = fs - 1;
+          sx --;
+          if (*lst)
+          {
+            sy ++;
+            if (*mst)
+            {
+              sx ++;
+              transition = true;
+            }
+            if (++mst >= fs) mst = steps;
+          }
+        }
+
+        // Computes the next scan
+        x = sx;
+        y = sy;
+        nst = mst;
+        npts = 0;
+        vector<Pixel> pix;
+        for (int i = 1; a * x - b * y >= mu2; i++)
+        {
+          if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          {
+            pix.push_back (Pixel (x, y));
+            npts ++;
+          }
+          if (*nst) x++;
+          y++;
+          if (++nst >= fs) nst = steps;
+        }
+        if (npts > SMIN) lscan.push_back (pix);
+        ndir++;
+      }
+
+      // Fills in the right scans
+      sx = cx;
+      sy = cy;
+      lst = steps;
+      ndir = 0; // numero de bande
+      transition = false;
+
+      npts = 1;
+      mst = steps;
+      while (npts != 0)
+      {
+        // Prepares the next scan
+        if (transition)
+        {
+          sy --;
+          if (--mst < steps) mst = fs - 1;
+          transition = false;
+        }
+        else
+        {
+          sx ++;
+          if (*lst)
+          {
+            if (--mst < steps) mst = fs - 1;
+            if (*mst)
+            {
+              if (++mst >= fs) mst = steps;
+              transition = true;
+            }
+            else sy --;
+          }
+          if (++lst >= fs) lst = steps;
+        }
+
+        // Computes the next scan
+        x = sx;
+        y = sy;
+        nst = mst;
+        npts = 0;
+        vector<Pixel> pix;
+        for (int i = 1; a * x - b * y >= mu2; i++)
+        {
+          if (y >= ymin && y < ymax && x >= xmin && x < xmax)
+          {
+            pix.push_back (Pixel (x, y));
+            npts ++;
+          }
+          if (*nst) x++;
+          y++;
+          if (++nst >= fs) nst = steps;
+        }
+        if (npts > SMIN) rscan.push_back (pix);
+        ndir++;
+      }
+    }
   }
 }
