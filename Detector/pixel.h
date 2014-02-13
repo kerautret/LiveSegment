@@ -48,6 +48,14 @@ public:
   int y ();
 
   /**
+   * @fn int manhattan (Pixel p)
+   * \brief Returns the manhattan distance to a other pixel.
+   * @param p the distant pixel.
+   */
+  int manhattan (Pixel p);
+
+
+  /**
    * @fn void translate (double distance, double cosa, double sina)
    * \brief Translates the pixel of a given distance in direction (cosa, sina).
    * @param dist distance.
@@ -55,6 +63,31 @@ public:
    * @param dy direction ordinate.
    */
   void translate (double dist, double dx, double dy);
+
+  /**
+   * @fn Pixel *drawing (Point p)
+   * \brief Returns the segment from the point to point p.
+   * @param p the remote point.
+   * @param n size of the returned array.
+   */
+  Pixel *drawing (Pixel p, int *n);
+
+  /**
+   * @fn Pixel *pathTo (Point p)
+   * \brief Returns the succession of local moves from the point to point p.
+   * A local move is the vector from a point to one of his neighbours.
+   * @param p the remote point.
+   * @param n size of the returned array.
+   */
+  Pixel *pathTo (Pixel p, int *n);
+
+  /**
+   * @fn bool *stepsTo (Point p)
+   * \brief Returns the location of the steps from the point to point p.
+   * @param p the remote point.
+   * @param n size of the returned array.
+   */
+  bool *stepsTo (Pixel p, int *n);
 
 
 private:

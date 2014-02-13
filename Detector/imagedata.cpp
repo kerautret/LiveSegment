@@ -154,8 +154,8 @@ vector<vector<Pixel> > ImageData::gradientRidges (DirectionalScan &dirScan,
 
   double normDir = sqrt (vectDir.x () * vectDir.x ()
                          + vectDir.y () * vectDir.y ());
-  double dx = vectDir.x () / normDir;
-  double dy = vectDir.y () / normDir;
+  double dx = - vectDir.y () / normDir;
+  double dy = vectDir.x () / normDir;
 
   for (int i = 1; i < nbScan - 1; i++)
   {

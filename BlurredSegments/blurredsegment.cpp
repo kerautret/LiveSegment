@@ -144,6 +144,31 @@ BlurredSegment::getDirection(){
 
 
 
+void 
+BlurredSegment::getDirection(int *coords){
+  double apvh = (double)convexhull->getAPV().height();
+  double aphl = (double)convexhull->getAPH().large();
+  Point2D from, to;
+  if ( apvh < aphl ) 
+    {
+      // Epaisseur vertical plus petite => droite "horizontale"
+      from = convexhull->getAPV().getEdge().getBegin();
+      to = convexhull->getAPV().getEdge().getEnd();
+    }
+  else
+    {
+      // Epaisseur horizontale plus petite => droite "verticale"
+      from = convexhull->getAPH().getEdge().getBegin();
+      to = convexhull->getAPH().getEdge().getEnd();
+    }
+  *coords++ = (int) from.getX ();
+  *coords++ = (int) from.getY ();
+  *coords++ = (int) to.getX ();
+  *coords = (int) to.getY ();
+}
+
+
+
 
 vector<Pixel> 
 BlurredSegment::getPrintedPoints(){

@@ -113,7 +113,7 @@ void ExtractionWidget::mousePressEvent (QMouseEvent *event)
     if (width > p1.x () && height > p1.y ())
     {
       scanOn = true;
-      cerr << "p1 defined: " << p1.x () << " " << p1.y () << endl;
+//      cerr << "p1 defined: " << p1.x () << " " << p1.y () << endl;
     }
     if (gestureModeOn)
     {
@@ -134,8 +134,8 @@ void ExtractionWidget::mouseReleaseEvent (QMouseEvent *event)
         && (width > p2.x() && height > p2.y()
             && p2.x() > 0 && p2.y() > 0))
     {
-      cerr << "p1 defined: " << p1.x() << " "<< p1.y() << endl;
-      cerr << "p2 defined: " << p2.x() << " "<< p2.y() << endl;
+//      cerr << "p1 defined: " << p1.x() << " "<< p1.y() << endl;
+//      cerr << "p2 defined: " << p2.x() << " "<< p2.y() << endl;
       numberOfDetectionSteps = 0;
       int dx = p2.x() - p1.x();
       int dy = p2.y() - p1.y();
@@ -169,7 +169,7 @@ void ExtractionWidget::mouseMoveEvent (QMouseEvent *event)
   if (scanOn)
   {
     this->p2 = Pixel (event->pos().x (), height - 1 - event->pos().y ());
-    if ((abs (p1.x() - p2.x()) > 2 && abs (p1.y() - p2.y()) > 2)
+    if (p1.manhattan (p2) > 5
         && (width > p2.x() && height > p2.y()
             && p2.x() > 0 && p2.y() > 0))
     {
@@ -330,12 +330,14 @@ void ExtractionWidget::keyPressEvent (QKeyEvent *event)
       prof->show ();
     }
   }
+*/
 
   if (event->key () == Qt::Key_X)
   {
     manualModeOn = ! manualModeOn;
   }
 
+/*
   if (event->key () == Qt::Key_G)
   {
     gestureModeOn = ! gestureModeOn;
@@ -399,10 +401,17 @@ void ExtractionWidget::afficheLineDetection ()
   QPainter painter (&augmentedImage);
   drawStraightLine (p1, p2, Qt::red, painter);
 
+//cout << "P1 = (" << p1.x () << "," << p1.y ()
+//     << ") et P2 = (" << p2.x () << "," << p2.y () << ")" << endl;
+
   if (manualModeOn)
   {
+    /** ZZZ
     DirectionalScan dirScan = DirectionalScan (p1, p2);
     dirScan.computeAllScans (0, 0, width, height);
+    */
+    DirectionalScan dirScan = DirectionalScan (p1, p2, 0, 0, width, height);
+
     vector<Pixel> pointsLineOrigin  = dirScan.getLeftScan (0);
     drawListPixels (pointsLineOrigin, Qt::white, painter);
 
