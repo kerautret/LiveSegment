@@ -68,11 +68,19 @@ BlurredSegment *SegmentDetector::detect (Pixel p1, Pixel p2)
   // Deuxieme detection apres ajustement de la direction initiale
   // puis detection en fonction des gradients max dans la direction
   //---------------------------------------------------------------
+  Pixel pCenter = segment->getCenter ();
+  Pixel p11 = Pixel (pCenter);
+  Pixel p12 = Pixel (pCenter);
+  double direction = segment->getDirection ();
+  double ca = -sin (direction);
+  double sa = cos (direction);
+  p11.translate (2 * maxWidth, ca, sa);
+  p12.translate (2 * maxWidth, -ca, -sa);
   int *coords = new int[4];
   segment->getDirection (coords);
   Pixel v1 (coords[0], coords[1]);
   Pixel v2 (coords[2], coords[3]);
-  DirectionalScan dirScan2 = DirectionalScan (p1, p2, v1, v2, 0,
+  DirectionalScan dirScan2 = DirectionalScan (p11, p12, v1, v2, 0,
           imageData->getWidth (), 0, imageData->getHeight ());
   delete coords;
 
@@ -101,11 +109,18 @@ BlurredSegment *SegmentDetector::detect (Pixel p1, Pixel p2)
   // Troisieme detection apres ajustement de la direction initiale
   // puis detection en fonction des gradients max dans la direction 
   //---------------------------------------------------------------
+  p11 = Pixel (pCenter);
+  p12 = Pixel (pCenter);
+  direction = segment->getDirection ();
+  ca = -sin (direction);
+  sa = cos (direction);
+  p11.translate (2 * maxWidth, ca, sa);
+  p12.translate (2 * maxWidth, -ca, -sa);
   coords = new int[4];
   segment->getDirection (coords);
   Pixel v3 (coords[0], coords[1]);
   Pixel v4 (coords[2], coords[3]);
-  dirScan2 = DirectionalScan (p1, p2, v3, v4, 0,
+  dirScan2 = DirectionalScan (p11, p12, v3, v4, 0,
                imageData->getWidth (), 0, imageData->getHeight ());
   delete coords;
 
